@@ -16,9 +16,9 @@ if __name__ == "__main__":
   # list all folder
   folders = [folder for folder in os.listdir(root_dir) if os.path.isdir(os.path.join(root_dir, folder))]
 
-  for folder in folders:
+  for folder in folders:  
     # list all files
-    files = [file for file in os.listdir(os.path.join(root_dir, folder)) if file.endswith(".wav")]
+    files = [file for file in os.listdir(os.path.join(root_dir, folder)) if file.endswith(".wav") or file.endswith(".ogg")]
     # move file to root dir
     for file in files:
       file_path = os.path.join(root_dir, folder, file)
