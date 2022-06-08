@@ -6,7 +6,7 @@ playground.ipynb
 
 # Data
 data/
-*saved_models/
+src/models/saved_models/
 
 # VS Code settings file
 .vscode/
