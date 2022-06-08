@@ -39,7 +39,7 @@ def split_samples_test_train(positive_samples_folder: str, negative_samples_fold
   n_hard_samples = len(hard_files)
 
   n_train = int(n_positive_files * p_train)
-  n_hard = int(n_train * p_hard)
+  n_hard = min(int(n_train * p_hard), n_hard_samples)
   n_negative = n_train - n_hard
 
   # set seed
