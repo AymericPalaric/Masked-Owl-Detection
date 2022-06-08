@@ -142,16 +142,20 @@ class BirdNet_loaded(tf.keras.Model):
         self.outputs = outputs
         self.path = path
         self.model = tf.keras.models.load_model(self.path)
-        self.model = tf.keras.Sequential(
-            [*self.model.layers[:-1], tf.keras.layers.Dense(self.outputs)])
+        self.new_model = tf.keras.Model(
+            inputs=self.model.input, outputs=self.model.layers[-2].output)
 
     def call(self, x):
-        return self.model(x)
+        x = self.new_model(x)
+        x = tf.keras.layers.Dense(self.outputs)(x)
+        return x
 
 
 if __name__ == "__main__":
     # Test
+    # model = tf.keras.load_model(
+    #     './src/models/saved_models/BirdNet_checkpoints')
     model = BirdNet_loaded(
         path='./src/models/saved_models/BirdNet_checkpoints', outputs=2)
-    model.build(input_shape=(None, 1, 224, 224))
+    model.build(input_shape=(None, 144000))
     model.summary()
