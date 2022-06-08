@@ -6,6 +6,7 @@ playground.ipynb
 
 # Data
 data/
+saved_models/
 
 # VS Code settings file
 .vscode/
