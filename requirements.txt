@@ -10,3 +10,6 @@ scikit-image==0.19.2
 wandb==0.12.16
 scipy==1.8.1
 IPython==8.4.0
+librosa==0.9.1
+torchvision==0.12.0
+torchaudio==0.11.0
