@@ -1,1 +1,2 @@
-data_path = "./data"
+
+data_path = ""
