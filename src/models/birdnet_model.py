@@ -137,18 +137,25 @@ class BirdNet_loaded(tf.keras.Model):
     BirdNet model from keras saved_model
     """
 
-    def __init__(self, path, outputs):
+    def __init__(self, path, num_outputs, in_shape=(144000)):
         super(BirdNet_loaded, self).__init__()
-        self.outputs = outputs
+        self.in_shape = in_shape
+        self.num_outputs = num_outputs
         self.path = path
         self.model = tf.keras.models.load_model(self.path)
         self.new_model = tf.keras.Model(
-            inputs=self.model.input, outputs=self.model.layers[-2].output)
+            inputs=self.model.layers[0].input, outputs=self.model.layers[-2].output)
 
     def call(self, x):
         x = self.new_model(x)
-        x = tf.keras.layers.Dense(self.outputs)(x)
+        x = tf.keras.layers.Dense(self.num_outputs)(x)
+        x = tf.keras.layers.Activation('sigmoid')(x)
         return x
+
+    def summary(self):
+        x = tf.keras.layers.Input(shape=self.in_shape)
+        model = tf.keras.Model(inputs=[x], outputs=self.call(x))
+        return model.summary()
 
 
 if __name__ == "__main__":
@@ -156,6 +163,6 @@ if __name__ == "__main__":
     # model = tf.keras.load_model(
     #     './src/models/saved_models/BirdNet_checkpoints')
     model = BirdNet_loaded(
-        path='./src/models/saved_models/BirdNet_checkpoints', outputs=2)
+        path='./src/models/saved_models/BirdNet_checkpoints', num_outputs=2)
     model.build(input_shape=(None, 144000))
     model.summary()
