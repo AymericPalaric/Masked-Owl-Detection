@@ -2,9 +2,11 @@ import librosa
 from scipy import signal
 import numpy as np
 from scipy.io import wavfile
+from maad import rois
+
 
 def load_audio_file(file_path: str, sr=None) -> tuple[np.ndarray, int]:
-  data, fs = librosa.load(file_path, sr=sr, dtype=np.float32)
+  data, fs = librosa.load(file_path, sr=sr, dtype=np.float32,mono=True)
   return data, fs
 
 def padding_audio(data: np.ndarray, window_size:int) -> np.ndarray:
@@ -36,6 +38,10 @@ def clip_audio(data: np.ndarray, fs: int, duration: float) -> np.ndarray:
   if data.shape[0] < duration * fs:
     return data
   return data[:int(duration * fs)]
+  
+def cwt_roi(s, fs, flims=(1000,3000), tlen=2, th=1e-6):
+  df=rois.find_rois_cwt(s, fs, flims, tlen, th)
+  return df.iloc[:,np.r_[1,3]].to_numpy()
 
 
 
