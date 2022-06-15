@@ -181,7 +181,7 @@ def create_dataset_from_generator(sample_rate=None, fixed_size=None, train_test=
     return dataset
 
 
-def create_dataset_birdnet(sample_rate=None, fixed_size=None, train_test="train", batch_size=16, shuffle=True, shuffle_buffer=10000, num_workers=1, drop_remainder=True, max_samples=None) -> tf.data.Dataset:
+def create_dataset_birdnet(sample_rate=None, train_test="train", batch_size=16, shuffle=True, shuffle_buffer=10000, num_workers=1, drop_remainder=True, max_samples=None) -> tf.data.Dataset:
     """
     Create a dataloader for birdnet fine-tuning.
     :param sample_rate: sample rate of the audio
@@ -220,9 +220,6 @@ def create_dataset_birdnet(sample_rate=None, fixed_size=None, train_test="train"
             pos_path, os.listdir(pos_path)[10]))[1]
         print(sample_rate)
 
-    if fixed_size is None:
-        fixed_size = constants.mean_pos_size
-
     if max_samples is None:
         max_samples = len(os.listdir(pos_path))
     else:
@@ -245,16 +242,25 @@ def create_dataset_birdnet(sample_rate=None, fixed_size=None, train_test="train"
     hard_dataset = tf.data.Dataset.from_generator(
         lambda: index_generator, tf.uint16)
 
+    target_len = 144000
+
     def _load_audio(index, sample_type):
+        # Resample audio to the target length by tweaking sample rate
         if sample_type == "pos":
-            return au.compute_mel_spectrogram(fix_length(au.load_audio_file(pos_paths[index], sr=sample_rate)[
-                0], size=fixed_size, mode='symmetric'), fs=sample_rate, n_fft=10, n_mels=3, hop_length=1), [1, 0]
+            init_len = len(au.load_audio_file(
+                pos_paths[index], sr=sample_rate)[0])
+
+            return fix_length(au.load_audio_file(pos_paths[index], sr=sample_rate*target_len/init_len)[0], size=144000), [1, 0]
         elif sample_type == "neg":
-            return au.compute_mel_spectrogram(fix_length(au.load_audio_file(neg_paths[index], sr=sample_rate)[
-                0], size=fixed_size, mode='symmetric'), fs=sample_rate, n_fft=10, n_mels=3, hop_length=1), [0, 1]
+            init_len = len(au.load_audio_file(
+                neg_paths[index], sr=sample_rate)[0])
+
+            return fix_length(au.load_audio_file(neg_paths[index], sr=sample_rate*target_len/init_len)[0], size=144000), [0, 1]
         elif sample_type == "hard":
-            return au.compute_mel_spectrogram(fix_length(au.load_audio_file(hard_paths[index], sr=sample_rate)[
-                0], size=fixed_size, mode='symmetric'), fs=sample_rate, n_fft=10, n_mels=3, hop_length=1), [0, 1]
+            init_len = len(au.load_audio_file(
+                hard_paths[index], sr=sample_rate)[0])
+
+            return fix_length(au.load_audio_file(hard_paths[index], sr=sample_rate*target_len/init_len)[0], size=144000), [0, 1]
         else:
             raise ValueError(
                 "sample_type must be either 'pos', 'neg' or 'hard'")
@@ -278,7 +284,7 @@ def create_dataset_birdnet(sample_rate=None, fixed_size=None, train_test="train"
 
 
 if __name__ == "__main__":
-    dataset = create_dataset_from_generator(
+    dataset = create_dataset_birdnet(
         train_test="train", batch_size=4, max_samples=5)
     for X, y in dataset:
         print(10*"=")

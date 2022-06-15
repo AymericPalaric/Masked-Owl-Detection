@@ -143,13 +143,14 @@ class BirdNet_loaded(tf.keras.Model):
         self.num_outputs = num_outputs
         self.path = path
         self.model = tf.keras.models.load_model(self.path)
+        print(self.model.layers)
         self.new_model = tf.keras.Model(
             inputs=self.model.layers[0].input, outputs=self.model.layers[-2].output)
 
-    def call(self, x):
-        x = self.new_model(x)
-        x = tf.keras.layers.Dense(self.num_outputs)(x)
-        x = tf.keras.layers.Activation('sigmoid')(x)
+    def call(self, x, training=False):
+        x = self.new_model(x, training=training)
+        x = tf.keras.layers.Dense(self.num_outputs)(x, training=training)
+        x = tf.keras.layers.Activation('sigmoid')(x, training=training)
         return x
 
     def summary(self):

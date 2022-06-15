@@ -13,6 +13,7 @@ src/models/saved_models/
 
 # Tensorflow weights
 *.h5
+saved_models/
 
 # Images
 *.png
