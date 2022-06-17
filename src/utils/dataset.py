@@ -1,4 +1,7 @@
+from venv import create
 import tensorflow as tf
+import torch
+import torchvision
 import numpy as np
 from librosa.util import fix_length
 import src.utils.path_utils as pu
@@ -7,6 +10,9 @@ import src.constants as constants
 import os
 import src.utils.audio_utils as au
 from tqdm import tqdm
+
+# =============================================================================
+# tf Datasets
 
 
 def create_dataset_classification(sample_rate=None, train_test="train", batch_size=16, shuffle=True, shuffle_buffer=10000, num_workers=1, drop_remainder=True, max_samples=None) -> tf.data.Dataset:
@@ -90,7 +96,7 @@ def create_dataset_classification(sample_rate=None, train_test="train", batch_si
 
 def create_dataset_from_generator(sample_rate=None, fixed_size=None, train_test="train", batch_size=16, shuffle=True, shuffle_buffer=10000, num_workers=1, drop_remainder=True, max_samples=None) -> tf.data.Dataset:
     """
-    Creates a dataset from a generator.
+    Creates a dataset from a generator, inputs are mel-spectrograms.
     :param generator: generator function
     :param batch_size: batch size
     :param shuffle: whether to shuffle the data
@@ -183,7 +189,7 @@ def create_dataset_from_generator(sample_rate=None, fixed_size=None, train_test=
 
 def create_dataset_birdnet(sample_rate=None, train_test="train", batch_size=16, shuffle=True, shuffle_buffer=10000, num_workers=1, drop_remainder=True, max_samples=None) -> tf.data.Dataset:
     """
-    Create a dataloader for birdnet fine-tuning.
+    Create a dataloader for birdnet fine-tuning, inputs are audio vectors.
     :param sample_rate: sample rate of the audio
     :param fixed_size: fixed size of the audio
     :param train_test: train or test
@@ -223,7 +229,8 @@ def create_dataset_birdnet(sample_rate=None, train_test="train", batch_size=16, 
     if max_samples is None:
         max_samples = len(os.listdir(pos_path))
     else:
-        max_samples = min(max_samples, len(os.listdir(pos_path))-2)
+        max_samples = min(max_samples, len(os.listdir(pos_path))-1,
+                          len(os.listdir(neg_path))-1, len(os.listdir(hard_path))-1)
 
     pos_paths = [os.path.join(pos_path, file) for file in os.listdir(pos_path)]
     np.random.shuffle(pos_paths)
@@ -272,7 +279,8 @@ def create_dataset_birdnet(sample_rate=None, train_test="train", batch_size=16, 
     hard_dataset = hard_dataset.map(lambda i: tf.py_function(func=_load_audio, inp=[i, "hard"],
                                                              Tout=[tf.float32, tf.float32]), num_parallel_calls=num_workers, deterministic=True)
 
-    dataset = pos_dataset.concatenate(neg_dataset).concatenate(hard_dataset)
+    dataset = pos_dataset.concatenate(
+        neg_dataset)  # .concatenate(hard_dataset)
 
     if shuffle:
         dataset = dataset.shuffle(shuffle_buffer)
@@ -281,13 +289,88 @@ def create_dataset_birdnet(sample_rate=None, train_test="train", batch_size=16, 
 
     dataset = dataset.prefetch(2)
     return dataset
+# =============================================================================
+
+# =============================================================================
+# torch Datasets
+
+
+class ClassifDataset(torch.utils.data.Dataset):
+    """
+    Dataset for classification
+    """
+
+    def __init__(self, positive_path, negative_path, hard_path, mean, std, transform_audio):
+        self.positive_path = positive_path
+        self.negative_path = negative_path
+        self.hard_path = hard_path
+        self.positive_files = [file for file in os.listdir(
+            self.positive_path) if file.endswith(".wav")]
+        self.negative_files = [file for file in os.listdir(
+            self.negative_path) if file.endswith(".wav")]
+        self.hard_files = [file for file in os.listdir(
+            self.hard_path) if file.endswith(".wav")]
+        self.reshape_size = (129, 229)
+
+        self.transform_audio = transform_audio
+        self.transform_image = torchvision.transforms.Compose([torchvision.transforms.ToTensor(
+        ), torchvision.transforms.Resize(self.reshape_size), torchvision.transforms.Normalize(mean=mean, std=std)])
+
+    def __len__(self):
+        return len(self.positive_files) + len(self.negative_files) + len(self.hard_files)
+
+    def __getitem__(self, idx):
+        if idx < len(self.positive_files):
+            file_path = os.path.join(
+                self.positive_path, self.positive_files[idx])
+            data, fs = au.load_audio_file(file_path)
+            x = self.transform_audio(data)
+            x = self.transform_image(x)
+            return x, 1
+        elif idx < len(self.positive_files) + len(self.negative_files):
+            file_path = os.path.join(
+                self.negative_path, self.negative_files[idx - len(self.positive_files)])
+            data, fs = au.load_audio_file(file_path)
+            x = self.transform_audio(data)
+            x = self.transform_image(x)
+            return x, 0
+        else:
+            file_path = os.path.join(
+                self.hard_path, self.hard_files[idx - len(self.positive_files) - len(self.negative_files)])
+            data, fs = au.load_audio_file(file_path)
+            x = self.transform_audio(data)
+            x = self.transform_image(x)
+            return x, 0
+
+
+def create_dataset(train_test: bool):
+
+    def transform_audio(data):
+        _, _, specto = au.compute_spectrogram(
+            data, 24000, nperseg=256, noverlap=256//4, scale="dB")
+        # freq clip
+        specto = specto[:120, :]
+        return np.stack((specto,)*3, axis=-1)
+
+    dataset = ClassifDataset(
+        positive_path=pu.get_train_test_path(
+            pu.get_positive_samples_path(), train_test),
+        negative_path=pu.get_train_test_path(
+            pu.get_negative_samples_path(), train_test),
+        hard_path=pu.get_train_test_path(
+            pu.get_hard_samples_path(), train_test),
+        mean=0.,
+        std=1.,
+        transform_audio=transform_audio)
+
+    return dataset
 
 
 if __name__ == "__main__":
-    dataset = create_dataset_birdnet(
-        train_test="train", batch_size=4, max_samples=5)
-    for X, y in dataset:
-        print(10*"=")
-        # print(_)
+    dataset = create_dataset(train_test=True)
+    train_dataloader = torch.utils.data.DataLoader(
+        dataset, batch_size=4, shuffle=True, drop_last=True)
+    for X, y in train_dataloader:
         print(X.shape)
-        print(y.shape)
+        print(y)
+        break

@@ -6,8 +6,6 @@ from torchsummary import summary
 
 
 # First BirdNet model
-
-
 class BirdNet(nn.Module):
     """
     Defines the BirdNet neural network that classifies audios on 2 classes.
@@ -143,7 +141,6 @@ class BirdNet_loaded(tf.keras.Model):
         self.num_outputs = num_outputs
         self.path = path
         self.model = tf.keras.models.load_model(self.path)
-        print(self.model.layers)
         self.new_model = tf.keras.Model(
             inputs=self.model.layers[0].input, outputs=self.model.layers[-2].output)
 
@@ -153,10 +150,10 @@ class BirdNet_loaded(tf.keras.Model):
         x = tf.keras.layers.Activation('sigmoid')(x, training=training)
         return x
 
-    def summary(self):
-        x = tf.keras.layers.Input(shape=self.in_shape)
-        model = tf.keras.Model(inputs=[x], outputs=self.call(x))
-        return model.summary()
+    # def summary(self):
+    #     x = tf.keras.layers.Input(shape=self.in_shape)
+    #     model = tf.keras.Model(inputs=[x], outputs=self.call(x))
+    #     return model.summary()
 
 
 if __name__ == "__main__":
