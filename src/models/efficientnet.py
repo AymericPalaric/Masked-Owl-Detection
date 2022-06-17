@@ -8,7 +8,7 @@ warnings.filterwarnings('ignore')
 device = torch.device(
     "cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-
+print(device)
 # Define EfficientNet model
 
 class EfficientNet(nn.Module):

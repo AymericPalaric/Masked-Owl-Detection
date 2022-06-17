@@ -71,7 +71,9 @@ if __name__ == "__main__":
         loss_fn = nn.CrossEntropyLoss()
         optimizer = torch.optim.SGD(
             model.parameters(), lr=learning_rate, momentum=0.9)
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+        device = torch.device(
+    "cuda") if torch.cuda.is_available() else torch.device("cpu")
+        print(device)
         train_dl = torch.utils.data.DataLoader(dataset.create_dataset(
             True), batch_size=batch_size, shuffle=True, drop_last=True)
         test_dl = torch.utils.data.DataLoader(dataset.create_dataset(
