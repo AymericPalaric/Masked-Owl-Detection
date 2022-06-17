@@ -11,6 +11,9 @@ playground.ipynb
 # Data
 data/
 
+# Models
+*.pth
+
 # VS Code settings file
 .vscode/
 
@@ -43,7 +46,7 @@ coverage.xml
 
 # Jupyter Notebook
 .ipynb_checkpoints
-
+*.ipynb
 
 # Environments
 .env
