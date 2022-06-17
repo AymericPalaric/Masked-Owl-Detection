@@ -132,12 +132,17 @@ def test_torch(dataloader, model, loss_fn, device, metrics, metrics_name):
     num_batches = len(dataloader)
     model.eval()
     test_loss, correct = 0, 0
+    metrics_values = [0. for m in metrics]
     with torch.no_grad():
         for X, y in dataloader:
             X, y = X.to(device), y.to(device)
             pred = model(X)
             test_loss += loss_fn(pred, y).item()
+            # for i in range(len(metrics)):
+            #     metrics_values[i] += metrics[i](y, pred)
             correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+    # for i in range(len(metrics)):
+    #     metrics_values[i] /= ceil(size/num_batches)
     test_loss /= num_batches
     correct /= size
     print(

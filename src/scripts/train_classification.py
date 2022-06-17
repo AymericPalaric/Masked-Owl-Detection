@@ -76,6 +76,8 @@ if __name__ == "__main__":
             model.parameters(), lr=learning_rate, momentum=0.9)
         model.to(device)
         print(device)
+        metrics_name = ['accuracy']
+        metrics = [tf.keras.metrics.Accuracy()]
         train_dl = torch.utils.data.DataLoader(dataset.create_dataset(
             True), batch_size=batch_size, shuffle=True, drop_last=True)
         test_dl = torch.utils.data.DataLoader(dataset.create_dataset(
@@ -83,5 +85,6 @@ if __name__ == "__main__":
         for t in range(epochs):
             print(f"Epoch {t+1}\n-------------------------------")
             train.train_torch(train_dl, model, loss_fn, optimizer, device)
-            train.test_torch(test_dl, model, loss_fn, device)
+            train.test_torch(test_dl, model, loss_fn,
+                             device, metrics, metrics_name)
         print("Done!")
