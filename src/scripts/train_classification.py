@@ -10,6 +10,9 @@ from src.models.efficientnet import EfficientNet
 from src.utils import dataset
 from src.training import train_classif as train
 
+device = torch.device(
+    "cuda") if torch.cuda.is_available() else torch.device("cpu")
+
 MODELS = {'birdnet_loaded': birdnet.BirdNet_loaded,
           'birdnet': birdnet.BirdNet, 'efficientnet': EfficientNet}
 
@@ -71,8 +74,7 @@ if __name__ == "__main__":
         loss_fn = nn.CrossEntropyLoss()
         optimizer = torch.optim.SGD(
             model.parameters(), lr=learning_rate, momentum=0.9)
-        device = torch.device(
-    "cuda") if torch.cuda.is_available() else torch.device("cpu")
+        model.to(device)
         print(device)
         train_dl = torch.utils.data.DataLoader(dataset.create_dataset(
             True), batch_size=batch_size, shuffle=True, drop_last=True)
