@@ -1,13 +1,12 @@
 import os
 import argparse
-
-from ..preprocessing import dataset
-from ..utils import path_utils
+from src.preprocessing import dataset
+from src.utils import path_utils
 
 if __name__ == "__main__":
 
   parser = argparse.ArgumentParser(description="Create negative samples from raw data.")
-  parser.add_argument("--n_samples", type=int, required=False, help="Nomber of samples to create.", default=-1)
+  parser.add_argument("--n_samples", type=int, required=False, help="Number of samples to create.", default=-1)
   parser.add_argument("--uuid", type=int, required=True, help="Unique identifier for this batch of extracted samples.")
   parser.add_argument("--log", type=bool, required=False, help="Bool to enable/disable logging.", default=True)
 

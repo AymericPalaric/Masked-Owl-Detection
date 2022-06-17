@@ -1,4 +1,8 @@
-#Custom ignore
+# Pytorch weights
+*.pt
+
+
+# Custom ignore
 config.py
 playground.py
 playground.ipynb
@@ -7,6 +11,9 @@ playground.ipynb
 # Data
 data/
 src/models/saved_models/
+
+# Models
+*.pth
 
 # VS Code settings file
 .vscode/
@@ -41,7 +48,7 @@ coverage.xml
 
 # Jupyter Notebook
 .ipynb_checkpoints
-
+*.ipynb
 
 # Environments
 .env
