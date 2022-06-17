@@ -10,8 +10,11 @@ from src.models.efficientnet import EfficientNet
 from src.utils import dataset
 from src.training import train_classif as train
 
+#PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:<10>
 device = torch.device(
     "cuda") if torch.cuda.is_available() else torch.device("cpu")
+if device == torch.device("cuda"):
+    torch.cuda.empty_cache()
 
 MODELS = {'birdnet_loaded': birdnet.BirdNet_loaded,
           'birdnet': birdnet.BirdNet, 'efficientnet': EfficientNet}
@@ -79,9 +82,9 @@ if __name__ == "__main__":
         metrics_name = ['accuracy']
         metrics = [tf.keras.metrics.Accuracy()]
         train_dl = torch.utils.data.DataLoader(dataset.create_dataset(
-            True), batch_size=batch_size, shuffle=True, drop_last=True)
+            True), batch_size=batch_size, shuffle=True, drop_last=True, num_workers=4, pin_memory=True)
         test_dl = torch.utils.data.DataLoader(dataset.create_dataset(
-            False), batch_size=batch_size, shuffle=True, drop_last=True)
+            False), batch_size=batch_size, shuffle=True, drop_last=True, num_workers=4, pin_memory=True)
         for t in range(epochs):
             print(f"Epoch {t+1}\n-------------------------------")
             train.train_torch(train_dl, model, loss_fn, optimizer, device)
