@@ -60,7 +60,7 @@ def compute_mean_std_classif(audio_transform, image_transform, batch_size: int, 
   dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, drop_last=False)
   for data, target in dataloader:
     mean += data.mean()
-    std += data.std(dim=0) ** 2
+    std += data.std() ** 2
   mean = mean / len(dataset)
   std = (std / len(dataset)).sqrt()
   return mean, std

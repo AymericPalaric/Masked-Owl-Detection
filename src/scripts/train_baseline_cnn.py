@@ -21,11 +21,11 @@ if __name__ == "__main__":
   optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
 
   # Training parameters
-  epochs = 1
-  batch_size = 8
+  epochs = 10
+  batch_size = 32
   
   # Loader parameters
-  n_workers = 4
+  n_workers = 8
 
   # Transforms
   reshape_size = (129, 129)
@@ -56,10 +56,10 @@ if __name__ == "__main__":
     print("-"*20)
 
     train_loss = training.train_loop(model, train_dataloader, optimizer, loss_fn, device)
-    # test_loss = training.test_loop(test_dataloader, model, loss_fn, device)
+    test_loss = training.test_loop(test_dataloader, model, loss_fn, device)
 
     train_losses.append(train_loss)
-    # test_losses.append(test_loss)
+    test_losses.append(test_loss)
 
     torch.save(model.state_dict(), f"trained_models/baseline_cnn_model_{epoch}.pt")
 
