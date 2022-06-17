@@ -64,7 +64,7 @@ def test_loop(dataloader, model, loss_fn, device):
       loss = loss_fn(y, targets)
       mean_loss += loss.item()
 
-      full_predictions.extend(torch.argmax(y, dim=1).cpu()numpy().tolist())
+      full_predictions.extend(torch.argmax(y, dim=1).cpu().numpy().tolist())
       full_targets.extend(y.cpu().numpy().tolist())
 
   mean_loss /= len(dataloader)
