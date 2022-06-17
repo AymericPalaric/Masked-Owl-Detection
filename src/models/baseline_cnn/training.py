@@ -65,7 +65,7 @@ def test_loop(dataloader, model, loss_fn, device):
       mean_loss += loss.item()
 
       full_predictions.extend(torch.argmax(y, dim=1).cpu().numpy().tolist())
-      full_targets.extend(y.cpu().numpy().tolist())
+      full_targets.extend(targets.cpu().numpy().tolist())
 
   mean_loss /= len(dataloader)
   precision, recall, f1, _  = precision_recall_fscore_support(full_targets, full_predictions, average='binary', pos_label=constants.positive_label)
