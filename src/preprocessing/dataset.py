@@ -53,11 +53,11 @@ def split_samples_test_train(positive_samples_folder: str, negative_samples_fold
   # split files
   train_positive_files = positive_files[:n_train]
   train_negative_files = negative_files[:n_negative]
-  train_hard_files = hard_files[n_hard:]
+  train_hard_files = hard_files[:n_hard]
 
   test_positive_files = positive_files[n_train:]
   test_negative_files = negative_files[n_negative:]
-  test_hard_files = hard_files[:n_hard]
+  test_hard_files = hard_files[n_hard:]
   
   # create train and test folders if not exist
   train_positive_folder = os.path.join(positive_samples_folder, "train")

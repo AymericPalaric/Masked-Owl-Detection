@@ -1,4 +1,8 @@
-#Custom ignore
+# Pytorch weights
+*.pt
+
+
+# Custom ignore
 config.py
 playground.py
 playground.ipynb
