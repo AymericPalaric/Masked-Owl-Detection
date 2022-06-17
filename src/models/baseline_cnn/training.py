@@ -42,7 +42,7 @@ def test_loop(dataloader, model, loss_fn, device):
   """ Test function No metrics yet implemented """
   # Initialize training
   size = len(dataloader.dataset)
-  printer = visualization.MetricsPrint("Train loop", ["precision", "recall", "f1-score"], size)
+  printer = visualization.MetricsPrint("Test loop", ["precision", "recall", "f1-score"], size)
   chrono = visualization.TimePredictor(len(dataloader))
   model.eval()
 
