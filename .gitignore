@@ -7,6 +7,7 @@ config.py
 playground.py
 playground.ipynb
 .DS_Store
+saved_models/
 
 # Data
 data/
