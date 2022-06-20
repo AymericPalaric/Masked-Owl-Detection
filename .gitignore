@@ -11,6 +11,7 @@ saved_models/
 
 # Data
 data/
+src/models/saved_models/
 
 # Models
 *.pth
@@ -20,6 +21,7 @@ data/
 
 # Tensorflow weights
 *.h5
+saved_models/
 
 # Images
 *.png
