@@ -2,7 +2,7 @@ import librosa
 from scipy import signal
 import numpy as np
 from scipy.io import wavfile
-from maad import rois
+import maad
 
 
 def load_audio_file(file_path: str, sr=None) -> tuple[np.ndarray, int]:
@@ -11,7 +11,7 @@ def load_audio_file(file_path: str, sr=None) -> tuple[np.ndarray, int]:
 
 def padding_audio(data: np.ndarray, window_size:int) -> np.ndarray:
   if  data.size % window_size != 0:
-    data=librosa.util.fix_length(data, data.size + window_size - data.size % window_size)
+    data = librosa.util.fix_length(data, data.size + window_size - data.size % window_size)
   return data
 
 def compute_spectrogram(data: np.ndarray, fs: int, nperseg: int, noverlap: int, scale: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -40,10 +40,8 @@ def clip_audio(data: np.ndarray, fs: int, duration: float) -> np.ndarray:
   return data[:int(duration * fs)]
   
 def cwt_roi(s, fs, flims=(1000,3000), tlen=2, th=1e-6):
-  df=rois.find_rois_cwt(s, fs, flims, tlen, th)
+  df = maad.rois.find_rois_cwt(s, fs, flims, tlen, th)
   return df.iloc[:,np.r_[1,3]].to_numpy()
-
-
 
 def save_audio_file(file_path: str, data: np.ndarray, fs: int) -> None:
   wavfile.write(filename=file_path, rate=fs, data=data)
