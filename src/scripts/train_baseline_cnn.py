@@ -6,7 +6,7 @@ nn = torch.nn
 from ..utils import torch_utils, transform_utils
 from ..models.baseline_cnn import training
 from ..models.baseline_cnn.model import Baseline
-
+from ..models.efficientnet import EfficientNet
 
 if __name__ == "__main__":
 
@@ -14,18 +14,18 @@ if __name__ == "__main__":
   print("Using device:", device)
 
   # Model
-  model = Baseline().to(device)
+  model = EfficientNet().to(device)
 
   # Optimizer
   loss_fn = nn.CrossEntropyLoss()
-  optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
+  optimizer = torch.optim.Adam(model.parameters(), lr=8e-6)
 
   # Training parameters
   epochs = 10
-  batch_size = 32
+  batch_size = 64
   
   # Loader parameters
-  n_workers = 8
+  n_workers = 4
 
   # Transforms
   reshape_size = (129, 129)
@@ -61,12 +61,12 @@ if __name__ == "__main__":
     train_losses.append(train_loss)
     test_losses.append(test_loss)
 
-    torch.save(model.state_dict(), f"trained_models/baseline_cnn_model_{epoch}.pt")
+    torch.save(model.state_dict(), f"trained_models/efficientnet_model_{epoch}.pt")
 
   # Plotting
   plt.figure()
   plt.plot(train_losses, label="Train loss")
   plt.plot(test_losses, label="Test loss")
   plt.legend()
-  plt.savefig("trained_models/baseline_cnn_loss.png")
+  plt.savefig("trained_models/efficientnet_loss.png")
   plt.show()
