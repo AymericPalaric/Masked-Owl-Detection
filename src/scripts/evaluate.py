@@ -42,7 +42,7 @@ if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Using device:", device)
 
-    evaluator = ClassifEvaluator(model_type=CLASS_MODELS[model_type], device=device, name=model_name,
+    evaluator = ClassifEvaluator(model_class=CLASS_MODELS[model_type], device=device, name=model_name,
                                  model_path=model_path, batch_size=batch_size, num_workers=num_workers, train_test=train_test, **model_args)
 
     if output == "confusion_matrix":

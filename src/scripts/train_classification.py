@@ -41,11 +41,12 @@ if __name__ == "__main__":
     print("Using device:", device)
 
     # Model
-    model = CLASS_MODELS[model_name](**model_args).to(device)
+    model = CLASS_MODELS[model_type](**model_args).to(device)
 
     # Optimizer
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.9)
+    #optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.9)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
     # Training parameters
     audio_transform = transform_utils.baseline_transform
@@ -91,12 +92,12 @@ if __name__ == "__main__":
         test_losses.append(test_loss)
 
         torch.save(model.state_dict(),
-                   f"trained_models/efficientnet_model_{epoch}.pt")
+                   f"trained_models/{model_name}_{epoch}.pt")
 
     # Plotting
     plt.figure()
     plt.plot(train_losses, label="Train loss")
     plt.plot(test_losses, label="Test loss")
     plt.legend()
-    plt.savefig("trained_models/efficientnet_loss.png")
+    plt.savefig(f"trained_models/{model_name}_loss.png")
     plt.show()
