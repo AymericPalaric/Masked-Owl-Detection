@@ -5,10 +5,7 @@ from efficientnet_pytorch import EfficientNet as EfficientNet_Pytorch
 from torchsummary import summary
 warnings.filterwarnings('ignore')
 
-device = torch.device(
-    "cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-print(device)
 # Define EfficientNet model
 
 class EfficientNet(nn.Module):
@@ -38,5 +35,9 @@ class EfficientNet(nn.Module):
 
 if __name__ == '__main__':
     model = EfficientNet()
+    device = torch.device(
+    "cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+    print(device)
     summary(model, input_size=(3, 129, 129))
     model.to(device)
