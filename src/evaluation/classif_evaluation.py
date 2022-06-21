@@ -2,7 +2,7 @@ import torch
 from torch import nn
 import tensorflow as tf
 import numpy as np
-from sklearn.metrics import accuracy_score, ConfusionMatrixDisplay, confusion_matrix
+from sklearn.metrics import accuracy_score, ConfusionMatrixDisplay, confusion_matrix, recall_score, precision_score, precision_recall_fscore_support
 import matplotlib.pyplot as plt
 from src.models import efficientnet
 from src.utils import torch_utils, transform_utils
@@ -87,9 +87,9 @@ class ClassifEvaluator():
         """
         self.load_model()
         self.model.eval()
-        self.metrics = self.metrics if self.metrics is not None else [accuracy_score]
+        self.metrics = self.metrics if self.metrics is not None else [accuracy_score, recall_score, precision_score, lambda true, pred: precision_recall_fscore_support(true, pred, average='binary')]
         self.metrics_name = self.metrics_name if self.metrics_name is not None else [
-            'accuracy']
+            'accuracy', 'recall', 'precision', 'ALL']
         self.get_preds()
 
         self.metrics_dict = {}
@@ -110,12 +110,12 @@ class ClassifEvaluator():
         #conf_mx = confusion_matrix(labels, preds)
 
         #plt.matshow(conf_mx)
-        ConfusionMatrixDisplay.from_predictions(labels, preds, normalize="true")
+        ConfusionMatrixDisplay.from_predictions(labels, preds, normalize=None)
         plt.savefig("trained_models/conf_matrix_"+self.name+".png")
 
 
 if __name__ == '__main__':
     evaluator = ClassifEvaluator(model_path='trained_models/efficientnet_model_9.pt', model_class=efficientnet.EfficientNet, train_test='test',
-                                 batch_size=32, name='efficientnet', metrics=[accuracy_score], metrics_name=['accuracy'], num_workers=1, pin_memory=False)
-    evaluator.evaluate()
+                                 batch_size=32, name='efficientnet', num_workers=1, pin_memory=False)
+    print(evaluator.evaluate())
     evaluator.plot_conf_matrix()
