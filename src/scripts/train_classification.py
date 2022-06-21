@@ -1,93 +1,102 @@
-import tensorflow as tf
+from ..models.efficientnet import EfficientNet
+from ..models.baseline_cnn.model import Baseline
+from ..models.baseline_cnn import training
+from ..utils import torch_utils, transform_utils
+import matplotlib.pyplot as plt
+import torchvision
 import torch
-from torch import nn
-import os
-import argparse
-from src.models import birdnet_model as birdnet
 import json
-import numpy as np
-from src.models.efficientnet import EfficientNet
-from src.utils import dataset
-from src.training import train_classif as train
+import argparse
+nn = torch.nn
 
-#PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:<10>
-device = torch.device(
-    "cuda") if torch.cuda.is_available() else torch.device("cpu")
-if device == torch.device("cuda"):
-    torch.cuda.empty_cache()
 
-MODELS = {'birdnet_loaded': birdnet.BirdNet_loaded,
-          'birdnet': birdnet.BirdNet, 'efficientnet': EfficientNet}
+# Models available
+CLASS_MODELS = {'efficientnet': EfficientNet, 'baseline_cnn': Baseline}
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Train classification model.")
-    parser.add_argument("--model_name", type=str,
-                        required=True, help="Name of the model to train.")
-    parser.add_argument("--torch", type=bool, default=True,
-                        help="Whether to use torch or tensorflow.")
-    parser.add_argument("--epochs", type=int, required=False,
-                        help="Number of epochs to train.", default=10)
-    parser.add_argument("--batch_size", type=int,
-                        required=False, help="Batch size.", default=32)
-    parser.add_argument("--learning_rate", type=float,
-                        required=False, help="Learning rate.", default=0.0005)
-    parser.add_argument("--model_args", type=json.loads,
-                        required=False, help="Model kwargs", default='{}')  # In windows, add: --model_args '{"key_1": "value_1", "key_2": "value_2"}'
+    # Parse arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--n_workers", type=int, default=4)
+    parser.add_argument("--reshape_size", type=tuple, default=(129, 129))
+    parser.add_argument("--model_type", type=str, default="efficientnet")
+    parser.add_argument("--model_name", type=str, default="efficientnet-b0")
+    parser.add_argument("--lr", type=float, default=1e-5)
+    # In windows, add: --model_args '{"key_1": "value_1", "key_2": "value_2"}'
+    parser.add_argument("--model_args", required=False, type=json.loads,
+                        help="Model kwargs", default='{}')
 
     args = parser.parse_args()
-
-    model_name = args.model_name
-    is_torch = args.torch
     epochs = args.epochs
     batch_size = args.batch_size
-    learning_rate = args.learning_rate
+    n_workers = args.n_workers
+    reshape_size = args.reshape_size
+    model_type = args.model_type
+    model_name = args.model_name
     model_args = args.model_args
+    lr = args.lr
 
-    # Load model
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print("Using device:", device)
 
-    if model_name not in MODELS:
-        raise(NotImplementedError("Model {} is not implemented.".format(model_name)))
+    # Model
+    model = CLASS_MODELS[model_name](**model_args).to(device)
 
-    model = MODELS[model_name](**model_args)
+    # Optimizer
+    loss_fn = nn.CrossEntropyLoss()
+    optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.9)
 
-    # Load data
-    if not is_torch:
-        train_dl = dataset.create_dataset_birdnet(
-            batch_size=batch_size, max_samples=500, shuffle_buffer=100)
-        test_dl = dataset.create_dataset_birdnet(
-            batch_size=batch_size, train_test='test', max_samples=500, shuffle_buffer=100)
+    # Training parameters
+    audio_transform = transform_utils.baseline_transform
 
-        # Training parameters
-        optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
-        loss = tf.keras.losses.CategoricalCrossentropy()
-        metrics_name = ['accuracy']
-        metrics = [tf.keras.metrics.Accuracy()]
+    image_transform_no_standardization = torchvision.transforms.Compose(
+        [torchvision.transforms.ToTensor(), torchvision.transforms.Resize(reshape_size)])
+    mean, std = torch_utils.compute_mean_std_classif(
+        audio_transform=audio_transform, image_transform=image_transform_no_standardization, batch_size=batch_size, num_workers=n_workers)
+    print(f"Mean dataset: {mean}, std dataset: {std}")
+    image_transform = torchvision.transforms.Compose([torchvision.transforms.ToTensor(
+    ), torchvision.transforms.Resize(reshape_size), torchvision.transforms.Normalize(mean=mean, std=std)])
 
-        model.summary((1, 3, 30333))
+    # Datasets
+    train_dataset = torch_utils.create_classif_dataset(
+        audio_transform, image_transform, train_test=True)
+    test_dataset = torch_utils.create_classif_dataset(
+        audio_transform, image_transform, train_test=False)
 
-        # Train model
-        for epoch in range(1, epochs+1):
-            print("-"*20)
-            train.train_loop_keras(train_dl, model, loss, batch_size, optimizer,
-                                   metrics, metrics_name, epoch=epoch)
-            # train.test_loop_keras(test_dl, model, loss, batch_size, optimizer,
-            #                 metrics, metrics_name, epoch=epoch)
+    # Dataloaders
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True,
+                                                   drop_last=True, num_workers=n_workers, pin_memory=True if torch.cuda.is_available() else False)
+    test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False,
+                                                  drop_last=False, num_workers=n_workers, pin_memory=True if torch.cuda.is_available() else False)
 
-    else:
-        loss_fn = nn.CrossEntropyLoss()
-        optimizer = torch.optim.SGD(
-            model.parameters(), lr=learning_rate, momentum=0.9)
-        model.to(device)
-        print(device)
-        metrics_name = ['accuracy']
-        metrics = [tf.keras.metrics.Accuracy()]
-        train_dl = torch.utils.data.DataLoader(dataset.create_dataset(
-            True), batch_size=batch_size, shuffle=True, drop_last=True, num_workers=4, pin_memory=True)
-        test_dl = torch.utils.data.DataLoader(dataset.create_dataset(
-            False), batch_size=batch_size, shuffle=True, drop_last=True, num_workers=4, pin_memory=True)
-        for t in range(epochs):
-            print(f"Epoch {t+1}\n-------------------------------")
-            train.train_torch(train_dl, model, loss_fn, optimizer, device)
-            train.test_torch(test_dl, model, loss_fn,
-                             device, metrics, metrics_name)
-        print("Done!")
+    print(
+        f"Training on {len(train_dataset)} samples, testing on {len(test_dataset)} samples")
+    print(
+        f"Training on {len(train_dataloader)} batches, testing on {len(test_dataloader)} batches")
+
+    # Losses
+    train_losses = list()
+    test_losses = list()
+
+    for epoch in range(epochs):
+        print(f"Epoch {epoch}")
+        print("-"*20)
+
+        train_loss = training.train_loop(
+            model, train_dataloader, optimizer, loss_fn, device)
+        test_loss = training.test_loop(test_dataloader, model, loss_fn, device)
+
+        train_losses.append(train_loss)
+        test_losses.append(test_loss)
+
+        torch.save(model.state_dict(),
+                   f"trained_models/efficientnet_model_{epoch}.pt")
+
+    # Plotting
+    plt.figure()
+    plt.plot(train_losses, label="Train loss")
+    plt.plot(test_losses, label="Test loss")
+    plt.legend()
+    plt.savefig("trained_models/efficientnet_loss.png")
+    plt.show()

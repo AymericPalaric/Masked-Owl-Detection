@@ -9,6 +9,7 @@ from src.utils import torch_utils, transform_utils
 import torchvision
 from tqdm import tqdm
 
+
 class ClassifEvaluator():
     """
     Evaluates a classification model.
@@ -87,7 +88,8 @@ class ClassifEvaluator():
         """
         self.load_model()
         self.model.eval()
-        self.metrics = self.metrics if self.metrics is not None else [accuracy_score, recall_score, precision_score, lambda true, pred: precision_recall_fscore_support(true, pred, average='binary')]
+        self.metrics = self.metrics if self.metrics is not None else [
+            accuracy_score, recall_score, precision_score, lambda true, pred: precision_recall_fscore_support(true, pred, average='binary')]
         self.metrics_name = self.metrics_name if self.metrics_name is not None else [
             'accuracy', 'recall', 'precision', 'ALL']
         self.get_preds()
@@ -101,15 +103,15 @@ class ClassifEvaluator():
 
         return self.metrics_dict
 
-    def plot_conf_matrix(self):
+    def conf_matrix(self):
         """
         Plot the confusion matrix.
         """
         preds, labels = self.get_preds()[:2]
-        
+
         #conf_mx = confusion_matrix(labels, preds)
 
-        #plt.matshow(conf_mx)
+        # plt.matshow(conf_mx)
         ConfusionMatrixDisplay.from_predictions(labels, preds, normalize=None)
         plt.savefig("trained_models/conf_matrix_"+self.name+".png")
 
