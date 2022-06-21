@@ -18,10 +18,10 @@ if __name__ == "__main__":
 
     # Optimizer
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=8e-6)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
 
     # Training parameters
-    epochs = 10
+    epochs = 20
     batch_size = 64
 
     # Loader parameters

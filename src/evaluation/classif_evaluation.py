@@ -2,12 +2,12 @@ import torch
 from torch import nn
 import tensorflow as tf
 import numpy as np
-from sklearn.metrics import ConfusionMatrixDisplay
+from sklearn.metrics import accuracy_score, ConfusionMatrixDisplay, confusion_matrix
 import matplotlib.pyplot as plt
 from src.models import efficientnet
 from src.utils import torch_utils, transform_utils
 import torchvision
-
+from tqdm import tqdm
 
 class ClassifEvaluator():
     """
@@ -69,16 +69,16 @@ class ClassifEvaluator():
         self.labels = []
         self.losses = []
 
-        for batch in self.dataloader:
+        for batch in tqdm(self.dataloader):
             with torch.no_grad():
                 x, y = batch
                 x = x.to(self.device)
                 y = y.to(self.device)
                 preds = self.model(x)
                 preds = preds.argmax(dim=1)
-                self.preds.append(preds.cpu().numpy())
-                self.labels.append(y.cpu().numpy())
-                self.losses.append(self.model.loss(preds, y).item())
+                self.preds.extend(preds.cpu().numpy())
+                self.labels.extend(y.cpu().numpy())
+                #self.losses.append(self.model.loss(preds, y).item())
         return (self.preds, self.labels, self.losses)
 
     def evaluate(self):
@@ -87,22 +87,17 @@ class ClassifEvaluator():
         """
         self.load_model()
         self.model.eval()
-        self.metrics = self.metrics if self.metrics is not None else [
-            torch_utils.accuracy]
+        self.metrics = self.metrics if self.metrics is not None else [accuracy_score]
         self.metrics_name = self.metrics_name if self.metrics_name is not None else [
             'accuracy']
         self.get_preds()
 
-        self.preds = np.concatenate(self.preds)
-        self.labels = np.concatenate(self.labels)
-        self.losses = np.concatenate(self.losses)
-
         self.metrics_dict = {}
 
         for metric, name in zip(self.metrics, self.metrics_name):
-            self.metrics_dict[name] = metric(self.labels, self.preds)
+            self.metrics_dict[name] = metric(self.preds, self.labels)
 
-        self.metrics_dict['loss'] = np.mean(self.losses)
+        #self.metrics_dict['loss'] = np.mean(self.losses)
 
         return self.metrics_dict
 
@@ -110,14 +105,17 @@ class ClassifEvaluator():
         """
         Plot the confusion matrix.
         """
-        preds, labels = self.get_preds()[0], self.get_preds()[1]
-        ConfusionMatrixDisplay.from_predictions(
-            labels, preds, normalize="true")
-        plt.show()
+        preds, labels = self.get_preds()[:2]
+        
+        #conf_mx = confusion_matrix(labels, preds)
+
+        #plt.matshow(conf_mx)
+        ConfusionMatrixDisplay.from_predictions(labels, preds, normalize="true")
+        plt.savefig("trained_models/conf_matrix_"+self.name+".png")
 
 
 if __name__ == '__main__':
     evaluator = ClassifEvaluator(model_path='trained_models/efficientnet_model_9.pt', model_class=efficientnet.EfficientNet, train_test='test',
-                                 batch_size=32, name='efficientnet', metrics=[torch_utils.accuracy], metrics_name=['accuracy'], num_workers=1, pin_memory=False)
+                                 batch_size=32, name='efficientnet', metrics=[accuracy_score], metrics_name=['accuracy'], num_workers=1, pin_memory=False)
     evaluator.evaluate()
     evaluator.plot_conf_matrix()
