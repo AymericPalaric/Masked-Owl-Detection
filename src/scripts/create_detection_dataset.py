@@ -16,7 +16,6 @@ if __name__ == "__main__":
   parser.add_argument("--train_test", type=bool, required=True, help="Bool to determine if the created samples are for training or testing.", default=True)
   args = parser.parse_args()
 
-
   dataset.create_detection_dataset(output_folder=args.output_dir, 
     raw_folder=path_utils.get_raw_data_path(), 
     positive_folder=path_utils.get_train_test_path(path_utils.get_positive_samples_path(), args.train_test),

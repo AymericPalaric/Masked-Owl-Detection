@@ -107,21 +107,21 @@ def split_samples_test_train(positive_samples_folder: str, negative_samples_fold
 def create_detection_dataset(output_folder: str, raw_folder: str, positive_folder: str, hard_folder: str, detection_duration: float, n_samples: int, uuid: int, call_proportion: float, hard_call_proportion: float, log: bool=True) -> None:
   # set seed
   np.random.seed(0)
-
   raw_files = [file for file in os.listdir(raw_folder) if file.endswith(".wav")]
   positive_files = [file for file in os.listdir(positive_folder) if file.endswith(".wav")]
   hard_files = [file for file in os.listdir(hard_folder) if file.endswith(".wav")]
-
   samples_per_file = int(n_samples / len(raw_files) + 0.5)
+  if not os.path.exists(os.path.join(output_folder,'samples')):
+    os.makedirs(os.path.join(output_folder,'samples'))
+  if not os.path.exists(os.path.join(output_folder,'target')):
+    os.makedirs(os.path.join(output_folder,'target'))
 
   for i, raw_file in enumerate(tqdm(raw_files, disable=not log)):
     raw_file_path = os.path.join(raw_folder, raw_file)
     raw_data, fs = audio_utils.load_audio_file(raw_file_path)
-
     # split raw data
     n_splits = int(len(raw_data) / (detection_duration * fs))
     splitted_data = np.array_split(raw_data, n_splits)[:samples_per_file]
-
     for j in range(len(splitted_data)):
       data_split = splitted_data[j]
       call_indices = []
@@ -148,8 +148,8 @@ def create_detection_dataset(output_folder: str, raw_folder: str, positive_folde
 
       call_indices = np.array(call_indices)
       #  save audio and positive call indices
-      audio_utils.save_audio_file(os.path.join(output_folder, f"{uuid}_{i}_{j}.wav"), data_split, fs)
-      np.save(os.path.join(output_folder, f"{uuid}_{i}_{j}.npy"), call_indices)
+      audio_utils.save_audio_file(os.path.join(output_folder,'samples', f"{uuid}_{i}_{j}.wav"), data_split, fs)
+      np.save(os.path.join(output_folder,'target', f"{uuid}_{i}_{j}.npy"), call_indices)
 
 def add_call_raw_data(data_split: np.ndarray, call_indices: list[list[int]], call_data: np.ndarray, positif: bool) -> None:
     start = np.random.randint(0, len(data_split) - len(call_data))
