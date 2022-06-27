@@ -33,7 +33,8 @@ class SlidingWindowPipeline():
 
     predictions = torch.nn.functional.softmax(self.classification_model(windows), dim=1)
     bbxs, scores = self.convert_predictions_to_bbx(predictions)
-    return self.apply_nms(bbxs, scores, self.treshold_nms)
+    bbxs, scores = self.apply_nms(bbxs, scores, self.treshold_nms)
+    return bbxs, scores
 
   def get_windows(self, data: np.ndarray):
     windows = list()
@@ -60,3 +61,19 @@ class SlidingWindowPipeline():
       return bbxs, scores
     indices = torchvision.ops.nms(bbxs, scores, threshold)
     return bbxs[indices], scores[indices]
+
+  def batched_forward(self, datas: np.ndarray):
+    im_idxs = list()
+    full_bbxs = list()
+    full_scores = list()
+    for k, data in enumerate(datas):
+      im_idxs.append(k)
+      bbxs, scores = self.forward(data)
+      full_bbxs.append(bbxs)
+      full_scores.append(scores)
+    return torch.tensor(im_idxs), torch.stack(full_bbxs, dim=0), torch.stack(full_scores, dim=0)
+
+  def __call__(self, datas: np.ndarray):
+    if datas.ndim == 2:
+      return self.forward(datas)
+    return self.batched_forward(datas)
