@@ -62,7 +62,7 @@ class ClassifEvaluator():
             self.model_path, map_location=torch.device(self.device)))
         self.model = self.model.to(self.device)
 
-    def get_preds(self):
+    def get_preds(self, thresh: float = 0.5):
         """
         Get the predictions.
         """
@@ -76,13 +76,14 @@ class ClassifEvaluator():
                 x = x.to(self.device)
                 y = y.to(self.device)
                 preds = self.model(x)
-                preds = preds.argmax(dim=1)
+                preds[preds >= thresh] = 1
+                preds[preds < thresh] = 0
                 self.preds.extend(preds.cpu().numpy())
                 self.labels.extend(y.cpu().numpy())
                 #self.losses.append(self.model.loss(preds, y).item())
         return (self.preds, self.labels, self.losses)
 
-    def evaluate(self):
+    def evaluate(self, thresh: float = 0.5):
         """
         Evaluate the model.
         """
@@ -92,7 +93,7 @@ class ClassifEvaluator():
             accuracy_score, recall_score, precision_score, lambda true, pred: precision_recall_fscore_support(true, pred, average='binary')]
         self.metrics_name = self.metrics_name if self.metrics_name is not None else [
             'accuracy', 'recall', 'precision', 'ALL']
-        self.get_preds()
+        self.get_preds(thresh=thresh)
 
         self.metrics_dict = {}
 
@@ -103,17 +104,17 @@ class ClassifEvaluator():
 
         return self.metrics_dict
 
-    def conf_matrix(self):
+    def conf_matrix(self, thresh: float = 0.5):
         """
         Plot the confusion matrix.
         """
-        preds, labels = self.get_preds()[:2]
+        preds, labels = self.get_preds(thresh=thresh)[:2]
 
         #conf_mx = confusion_matrix(labels, preds)
 
         # plt.matshow(conf_mx)
         ConfusionMatrixDisplay.from_predictions(labels, preds, normalize=None)
-        plt.savefig("trained_models/conf_matrix_"+self.name+".png")
+        plt.savefig("trained_models/conf_matrix_"+self.name+f"_{100*thresh}.png")
 
 
 if __name__ == '__main__':

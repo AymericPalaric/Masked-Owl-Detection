@@ -9,6 +9,7 @@ import torchvision
 import torch
 import json
 import argparse
+from tqdm import tqdm
 nn = torch.nn
 
 
@@ -27,7 +28,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--num_workers", type=int, default=4)
     parser.add_argument(
-        "--output", type=str, choices=["confusion_matrix", "metrics", "both"], default="both")
+        "--output", type=str, choices=["confusion_matrix", "metrics", "both", "thresh_range"], default="both")
 
     args = parser.parse_args()
     model_type = args.model_type
@@ -54,3 +55,10 @@ if __name__ == "__main__":
     elif output == "both":
         print(evaluator.evaluate())
         evaluator.conf_matrix()
+
+    elif output == "thresh_range":
+        evals = {}
+        for thresh in tqdm(range(0.3, 0.9, 0.05)):
+            evals[thresh] = evaluator.evaluate(thresh)
+            evaluator.conf_matrix(thresh)
+        print(evals)
