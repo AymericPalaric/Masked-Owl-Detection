@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
     elif output == "thresh_range":
         evals = {}
-        for thresh in tqdm(range(0.3, 0.9, 0.05)):
-            evals[thresh] = evaluator.evaluate(thresh)
-            evaluator.conf_matrix(thresh)
+        for thresh in tqdm(range(30, 90, 5)):
+            evals[thresh] = evaluator.evaluate(thresh/100)
+            evaluator.conf_matrix(thresh/100)
         print(evals)
