@@ -127,7 +127,7 @@ def create_detection_dataset(output_folder: str, raw_folder: str, positive_folde
       call_indices = []
 
       # determine the number of positive calls
-      n_calls = np.random.poisson(call_proportion)
+      n_calls = max(np.random.poisson(call_proportion),1)
       indices_call = np.random.permutation(len(positive_files))[:n_calls]
       for k in indices_call:
         positive_file_path = os.path.join(positive_folder, positive_files[k])
