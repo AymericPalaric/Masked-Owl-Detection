@@ -36,7 +36,7 @@ class EfficientNet(nn.Module):
 if __name__ == '__main__':
     model = EfficientNet()
     device = torch.device(
-    "cuda") if torch.cuda.is_available() else torch.device("cpu")
+        "cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     print(device)
     summary(model, input_size=(3, 129, 129))
