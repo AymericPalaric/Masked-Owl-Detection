@@ -53,47 +53,47 @@ class ClassifEvaluator():
         self.dataloader = torch.utils.data.DataLoader(self.dataset, batch_size=batch_size, shuffle=True,
                                                       drop_last=True, num_workers=num_workers, pin_memory=self.pin_memory)
 
-    def load_model(self):
-        """
-        Load the model.
-        """
+        # Load model weights
         self.model = self.model_class(**self.model_kwargs)
-        self.model.load_state_dict(torch.load(
-            self.model_path, map_location=torch.device(self.device)))
+        self.model.load_state_dict(torch.load(self.model_path, map_location=torch.device(self.device)))
         self.model = self.model.to(self.device)
 
-    def get_preds(self, thresh: float = 0.5):
+
+    def get_preds(self, thresh: float = 0.5, verbose=True):
         """
         Get the predictions.
         """
         self.preds = []
         self.labels = []
         self.losses = []
-
-        for batch in tqdm(self.dataloader):
+        iterator = tqdm(self.dataloader) if verbose else self.dataloader
+        for batch in iterator:
             with torch.no_grad():
                 x, y = batch
                 x = x.to(self.device)
                 y = y.to(self.device)
                 preds = self.model(x)
-                preds[preds >= thresh] = 1
-                preds[preds < thresh] = 0
+                preds[preds>=thresh]=1
+                preds[preds<thresh]=0
+                
+                preds=torch.argmax(preds, dim=1)
+
                 self.preds.extend(preds.cpu().numpy())
                 self.labels.extend(y.cpu().numpy())
                 #self.losses.append(self.model.loss(preds, y).item())
         return (self.preds, self.labels, self.losses)
 
-    def evaluate(self, thresh: float = 0.5):
+    def evaluate(self, thresh: float = 0.5, verbose = True):
         """
         Evaluate the model.
         """
-        self.load_model()
+        
         self.model.eval()
         self.metrics = self.metrics if self.metrics is not None else [
             accuracy_score, recall_score, precision_score, lambda true, pred: precision_recall_fscore_support(true, pred, average='binary')]
         self.metrics_name = self.metrics_name if self.metrics_name is not None else [
             'accuracy', 'recall', 'precision', 'ALL']
-        self.get_preds(thresh=thresh)
+        self.get_preds(thresh=thresh, verbose=verbose)
 
         self.metrics_dict = {}
 
@@ -104,17 +104,17 @@ class ClassifEvaluator():
 
         return self.metrics_dict
 
-    def conf_matrix(self, thresh: float = 0.5):
+    def conf_matrix(self, thresh: float = 0.5, verbose=True):
         """
         Plot the confusion matrix.
         """
-        preds, labels = self.get_preds(thresh=thresh)[:2]
+        preds, labels = self.get_preds(thresh=thresh, verbose=verbose)[:2]
 
         #conf_mx = confusion_matrix(labels, preds)
 
         # plt.matshow(conf_mx)
         ConfusionMatrixDisplay.from_predictions(labels, preds, normalize=None)
-        plt.savefig("trained_models/conf_matrix_"+self.name+f"_{100*thresh}.png")
+        plt.savefig("trained_models/conf_matrix_"+self.name+f"_{int(100*thresh)}.png")
 
 
 if __name__ == '__main__':

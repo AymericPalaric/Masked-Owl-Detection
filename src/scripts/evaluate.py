@@ -47,18 +47,28 @@ if __name__ == "__main__":
                                  model_path=model_path, batch_size=batch_size, num_workers=num_workers, train_test=train_test, **model_args)
 
     if output == "confusion_matrix":
+        print("Evaluating model through confusion matrix")
         evaluator.conf_matrix()
 
     elif output == "metrics":
+        print("Evaluating model through metrics")
         print(evaluator.evaluate())
 
     elif output == "both":
+        print("Evaluating model through both metrics and confusion matrix")
         print(evaluator.evaluate())
         evaluator.conf_matrix()
 
     elif output == "thresh_range":
+        print("Evaluating preds for a range of thresholds...")
         evals = {}
-        for thresh in tqdm(range(30, 90, 5)):
-            evals[thresh] = evaluator.evaluate(thresh/100)
-            evaluator.conf_matrix(thresh/100)
+        thresh_range = [i/100 for i in range(30,99,1)]
+        for thresh in tqdm(range(30, 99, 1)):
+            evals[thresh] = evaluator.evaluate(thresh/100, verbose=False)
+            #evaluator.conf_matrix(thresh/100, verbose=False)
         print(evals)
+        fig = plt.figure()
+        for key in ["accuracy", "recall", "precision"]:
+            plt.plot(thresh_range, [evals[i][key] for i in evals])
+        plt.legend([key for key in evals[thresh]])
+        plt.savefig("./trained_models/thresh_range_"+model_name+".png")
