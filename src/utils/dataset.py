@@ -60,6 +60,31 @@ class ClassifDataset(torch.utils.data.Dataset):
             x = self.transform_image(x)
             return x, 0
 
+class OneShotDataset(torch.utils.data.Dataset):
+    def __init__(self, detection_dir,transform_audio, device,mean,std):
+        self.detection_dir = detection_dir
+        self.device = device
+        self.samplepath = os.path.join(self.detection_dir, 'samples')
+        self.targetpath = os.path.join(self.detection_dir, 'target')
+        self.indexes = list(map(lambda x: x.split('.')[0],os.listdir(self.samplepath)))
+        self.transform_audio = transform_audio
+        self.reshape_size=(128,4096)
+        self.transform_image = torchvision.transforms.Compose([torchvision.transforms.ToTensor(), torchvision.transforms.Resize(self.reshape_size),torchvision.transforms.Normalize(mean=mean, std=std)])
+        print(mean)
+    def __len__(self):
+        return len(os.listdir((self.samplepath)))
+        
+    def __getitem__(self,idx):
+        index=self.indexes[idx]
+        audio,fs = load_audio_file(os.path.join(self.samplepath,index +'.wav'))
+        targets = np.load(os.path.join(self.targetpath,index +'.npy'))  
+        data = self.transform_audio(audio)
+        reshape_ratio= self.reshape_size[1]/len(audio)
+        boxes=torch.as_tensor([[start*reshape_ratio,0,end*reshape_ratio,self.reshape_size[0]] for [_,start,end] in targets ], dtype=torch.float64)
+        labels=torch.as_tensor([target[0] for target in targets], dtype=torch.int64)
+        target_dict={'boxes':boxes,'labels':labels}
+        x = torch.squeeze(self.transform_image(data))
+        return x,target_dict
 
 def create_dataset(train_test: bool):
 
@@ -85,11 +110,11 @@ def create_dataset(train_test: bool):
 
 
 def transform_audio(data):
-    _, _, specto = compute_mel_spectrogram(
-        data, 24000, n_fft=1024, hop_length=512, n_mels=128)
+    _, _, specto = au.compute_spectrogram(
+        data, 24000, nperseg=256, noverlap=256//4, scale="dB")
     # freq clip
     specto = specto[:120, :]
-    return specto
+    return np.stack((specto,)*3, axis=-1)
 
 
 class SlidingDataset(torch.utils.data.Dataset):
