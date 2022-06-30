@@ -5,7 +5,7 @@ from src.utils.dataset import OneShotDataset,transform_audio
 from src.models.faster_rcnn import rcnn_pretrained_backbone_train
 
 
-def loss_faster_rcnn(dict_losses : dict, training_rpn : bool, training_head : bool):
+def loss_faster_rcnn(dict_losses : dict, training_rpn : bool, training_head : bool, device):
     """ Reduce the dictionnary of losses
 
     Args:
@@ -39,7 +39,7 @@ def accumulate_losses(mean_loss, losses):
     mean_loss["loss_classifier"] += losses["loss_classifier"].item()
     mean_loss["loss_box_reg"] += losses["loss_box_reg"].item()
 
-def train_loop(dataloader, model, loss_fn, optimizer, scheduler, macro_batch=1):
+def train_loop(dataloader,device, model, loss_fn, optimizer, scheduler, macro_batch=1):
     # Initialize training
     model.train()
     optimizer.zero_grad()

@@ -57,10 +57,10 @@ if __name__ == "__main__":
                                                 step_size=3,
                                                 gamma=0.1)
 
-    loss_fn_frrcnn=lambda x:loss_faster_rcnn(x,True,True)
+    loss_fn_frrcnn=lambda x:loss_faster_rcnn(x,True,True,device)
 
     for i in range(epochs):
         print(f"Epoch {i+1}")
-        train_loop(dataloader=detection_dataloader, model=model, loss_fn=loss_fn_frrcnn, optimizer=sgd_optimizer, scheduler=lr_scheduler, macro_batch=1)   
+        train_loop(dataloader=detection_dataloader, device=device, model=model, loss_fn=loss_fn_frrcnn, optimizer=sgd_optimizer, scheduler=lr_scheduler, macro_batch=1)   
         print("---------------------------")
     print("Finished training")
