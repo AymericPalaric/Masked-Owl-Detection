@@ -7,15 +7,21 @@ config.py
 playground.py
 playground.ipynb
 .DS_Store
+saved_models/
 
 # Data
 data/
+src/models/saved_models/
+
+# Models
+*.pth
 
 # VS Code settings file
 .vscode/
 
 # Tensorflow weights
 *.h5
+saved_models/
 
 # Images
 *.png
@@ -43,7 +49,7 @@ coverage.xml
 
 # Jupyter Notebook
 .ipynb_checkpoints
-
+*.ipynb
 
 # Environments
 .env

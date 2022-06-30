@@ -5,30 +5,50 @@ from ..utils import torch_utils, transform_utils
 import matplotlib.pyplot as plt
 import torchvision
 import torch
+import json
+import argparse
 nn = torch.nn
 
 
+# Models available
+CLASS_MODELS = {'efficientnet': EfficientNet, 'baseline_cnn': Baseline}
+
 if __name__ == "__main__":
+    # Parse arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--n_workers", type=int, default=4)
+    parser.add_argument("--reshape_size", type=tuple, default=(129, 129))
+    parser.add_argument("--model_type", type=str, default="efficientnet")
+    parser.add_argument("--model_name", type=str, default="efficientnet-b0")
+    parser.add_argument("--lr", type=float, default=1e-5)
+    # In windows, add: --model_args '{"key_1": "value_1", "key_2": "value_2"}'
+    parser.add_argument("--model_args", required=False, type=json.loads,
+                        help="Model kwargs", default='{}')
+
+    args = parser.parse_args()
+    epochs = args.epochs
+    batch_size = args.batch_size
+    n_workers = args.n_workers
+    reshape_size = args.reshape_size
+    model_type = args.model_type
+    model_name = args.model_name
+    model_args = args.model_args
+    lr = args.lr
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Using device:", device)
 
     # Model
-    model = EfficientNet().to(device)
+    model = CLASS_MODELS[model_type](**model_args).to(device)
 
     # Optimizer
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
+    #optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.9)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
     # Training parameters
-    epochs = 20
-    batch_size = 64
-
-    # Loader parameters
-    n_workers = 4
-
-    # Transforms
-    reshape_size = (129, 129)
     audio_transform = transform_utils.baseline_transform
 
     image_transform_no_standardization = torchvision.transforms.Compose(
@@ -72,12 +92,12 @@ if __name__ == "__main__":
         test_losses.append(test_loss)
 
         torch.save(model.state_dict(),
-                   f"trained_models/efficientnet_model_{epoch}.pt")
+                   f"trained_models/{model_name}_{epoch}.pt")
 
     # Plotting
     plt.figure()
     plt.plot(train_losses, label="Train loss")
     plt.plot(test_losses, label="Test loss")
     plt.legend()
-    plt.savefig("trained_models/efficientnet_loss.png")
+    plt.savefig(f"trained_models/{model_name}_loss.png")
     plt.show()
