@@ -112,7 +112,7 @@ def create_detection_dataset(output_folder: str, raw_folder: str, positive_folde
   positive_files = [file for file in os.listdir(positive_folder) if file.endswith(".wav")]
   hard_files = [file for file in os.listdir(hard_folder) if file.endswith(".wav")]
 
-  samples_per_file = int(n_samples / len(raw_files) + 0.5)
+  samples_per_file = int(n_samples / len(raw_files) + 1)
 
   for i, raw_file in enumerate(tqdm(raw_files, disable=not log)):
     raw_file_path = os.path.join(raw_folder, raw_file)
