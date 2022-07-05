@@ -67,13 +67,13 @@ class SlidingWindowPipeline():
     full_bbxs = list()
     full_scores = list()
     for k, data in enumerate(datas):
-      im_idxs.append(k)
       bbxs, scores = self.forward(data)
+      im_idxs.extend([k for _ in range(len(scores))])
       full_bbxs.append(bbxs)
       full_scores.append(scores)
     return torch.tensor(im_idxs), torch.stack(full_bbxs, dim=0), torch.stack(full_scores, dim=0)
 
   def __call__(self, datas: np.ndarray):
     if datas.ndim == 2:
-      return self.forward(datas)
-    return self.batched_forward(datas)
+      return self.batched_forward(datas)
+    return self.forward(datas)

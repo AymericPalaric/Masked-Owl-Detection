@@ -5,7 +5,9 @@ from src.constants import Detection
 def compute_mAP(ground_truth_detections, detections, iou_threshold):
   precision, recall = compute_precision_recall(ground_truth_detections, detections, iou_threshold)
   auc = interpolated_auc(precision, recall)
-  return sum(auc) / len(auc)
+  if torch.any(auc):
+    return sum(auc) / len(auc)
+  return 0.
 
 def compute_precision_recall(ground_truth_detections, detections, iou_threshold):
   """
@@ -19,11 +21,11 @@ def compute_precision_recall(ground_truth_detections, detections, iou_threshold)
       _type_: _description_
   """
 
-  if not torch.any(ground_truth_detections) and torch.any(detections):
+  if not torch.any(ground_truth_detections[Detection.BBXS]) and torch.any(detections[Detection.BBXS]):
     precision = torch.tensor([1, 0, 0], dtype=torch.float32)
     recall = torch.tensor([0, 0, 1], dtype=torch.float32)
     return precision, recall
-  if  torch.any(ground_truth_detections) and not torch.any(detections):
+  if  torch.any(ground_truth_detections[Detection.BBXS]) and not torch.any(detections[Detection.BBXS]):
     precision = torch.tensor([1, 0, 0], dtype=torch.float32)
     recall = torch.tensor([0, 0, 1], dtype=torch.float32)
     return precision, recall
