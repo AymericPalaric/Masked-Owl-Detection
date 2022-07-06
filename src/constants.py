@@ -13,8 +13,8 @@ positive_label = 1
 negative_label = 0
 hard_label = 0
 
-mean_test = -1.47
-std_test = 3.36
+mean_test = -0.73
+std_test = 2.383
 
 
 class Detection:

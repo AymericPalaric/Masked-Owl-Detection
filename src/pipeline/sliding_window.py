@@ -81,3 +81,4 @@ class SlidingWindowPipeline():
         if datas.ndim == 2:
             return self.batched_forward(datas)
         return self.forward(datas)
+
