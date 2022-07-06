@@ -30,9 +30,10 @@ def compute_spectrogram(data: np.ndarray, fs: int, nperseg: int, noverlap: int, 
     Sxx = 20 * np.log10((Sxx + 1e-8) / np.max(Sxx + 1e-8))
   return freq[1:], time, Sxx[1:]
 
-def compute_mel_spectrogram(data: np.ndarray, fs: int, n_mels: int, n_fft: int, hop_length: int) -> np.ndarray:
-  mel_spectrogram = librosa.feature.melspectrogram(y=data, sr=fs, n_fft=n_fft, hop_length=hop_length, n_mels=n_mels, fmin=0, fmax=fs//2)
-  return mel_spectrogram
+def compute_mel_spectrogram(data: np.ndarray, fs: int, n_mels: int, n_fft: int, hop_length: int, fmin: int, fmax: int) -> np.ndarray:
+    mel_spectrogram = librosa.feature.melspectrogram(y=data, sr=fs, n_fft=n_fft, hop_length=hop_length, n_mels=n_mels, fmin=fmin, fmax=fmax)
+    mel_spectrogram = librosa.power_to_db(mel_spectrogram)
+    return mel_spectrogram
 
 def clip_audio(data: np.ndarray, fs: int, duration: float) -> np.ndarray:
   if data.shape[0] < duration * fs:

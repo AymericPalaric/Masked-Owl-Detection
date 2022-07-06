@@ -59,7 +59,7 @@ class ClassifEvaluator():
         self.model = self.model.to(self.device)
 
 
-    def get_preds(self, thresh: float = 0.5, verbose=True):
+    def get_preds(self, thresh=None, verbose=True):
         """
         Get the predictions.
         """
@@ -73,8 +73,10 @@ class ClassifEvaluator():
                 x = x.to(self.device)
                 y = y.to(self.device)
                 preds = self.model(x)
-                preds[preds>=thresh]=1
-                preds[preds<thresh]=0
+                
+                if thresh is not None:
+                    preds[preds>=thresh]=1
+                    preds[preds<thresh]=0
                 
                 preds=torch.argmax(preds, dim=1)
 
@@ -83,7 +85,7 @@ class ClassifEvaluator():
                 #self.losses.append(self.model.loss(preds, y).item())
         return (self.preds, self.labels, self.losses)
 
-    def evaluate(self, thresh: float = 0.5, verbose = True):
+    def evaluate(self, thresh=None, verbose = True):
         """
         Evaluate the model.
         """
@@ -104,7 +106,7 @@ class ClassifEvaluator():
 
         return self.metrics_dict
 
-    def conf_matrix(self, thresh: float = 0.5, verbose=True):
+    def conf_matrix(self, thresh=None, verbose=True):
         """
         Plot the confusion matrix.
         """

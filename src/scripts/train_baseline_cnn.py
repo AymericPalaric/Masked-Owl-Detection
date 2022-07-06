@@ -21,7 +21,7 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
 
     # Training parameters
-    epochs = 20
+    epochs = 5
     batch_size = 64
 
     # Loader parameters
@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     # Transforms
     reshape_size = (129, 129)
-    audio_transform = transform_utils.baseline_transform
+    audio_transform = transform_utils.mel_transform
 
     image_transform_no_standardization = torchvision.transforms.Compose(
         [torchvision.transforms.ToTensor(), torchvision.transforms.Resize(reshape_size)])
@@ -72,7 +72,7 @@ if __name__ == "__main__":
         test_losses.append(test_loss)
 
         torch.save(model.state_dict(),
-                   f"trained_models/efficientnet_model_{epoch}.pt")
+                   f"trained_models/efficientnet_model_mel_{epoch}.pt")
 
     # Plotting
     plt.figure()

@@ -22,8 +22,8 @@ class EfficientNet(nn.Module):
         self.model = EfficientNet_Pytorch.from_pretrained('efficientnet-b5')
         self.num_classes=num_classes
         feature = self.model._fc.in_features
-        self.model._fc = nn.Sequential(nn.Linear(
-            in_features=feature, out_features=num_classes, bias=True), nn.Softmax(1))
+        self.model._fc = nn.Linear(
+            in_features=feature, out_features=num_classes, bias=True)
 
     def forward(self, x):
         """
