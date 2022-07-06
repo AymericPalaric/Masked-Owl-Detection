@@ -19,7 +19,7 @@ class SlidingWindowPipeline():
         self.window_overlap = window_overlap
         self.window_type = window_type
 
-        self.classification_model = classification_model
+        self.classification_model = classification_model.to(device)
         self.audio_transform = audio_transform
         self.image_transform = image_transform
         self.freq_max = freq_max
@@ -58,7 +58,9 @@ class SlidingWindowPipeline():
                 bbxs.append([idx_start, 0, idx_start +
                             self.window_size, self.freq_max])
                 scores.append(predictions[i, constants.positive_label])
-        return torch.tensor(bbxs), torch.tensor(scores)
+        
+        
+        return torch.tensor(bbxs, dtype=torch.float32), torch.tensor(scores, dtype=torch.float32)
 
     def apply_nms(self, bbxs: torch.Tensor, scores: torch.Tensor, threshold: float):
         if bbxs.shape[0] == 0:
@@ -73,8 +75,13 @@ class SlidingWindowPipeline():
         for k, data in enumerate(datas):
             bbxs, scores = self.forward(data)
             im_idxs.extend([k for _ in range(len(scores))])
+            #if len(bbxs) != 0:
+            #    full_bbxs.append(bbxs)
+            #    full_scores.append(scores)
             full_bbxs.append(bbxs)
             full_scores.append(scores)
+        #print(full_bbxs, full_scores)
+
         return torch.tensor(im_idxs), torch.stack(full_bbxs, dim=0), torch.stack(full_scores, dim=0)
 
     def __call__(self, datas: np.ndarray):
