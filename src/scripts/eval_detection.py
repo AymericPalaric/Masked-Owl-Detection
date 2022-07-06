@@ -12,7 +12,7 @@ from src.utils import transform_utils, torch_utils, audio_utils, path_utils
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-model_path = "./trained_models/efficientnet_detek_19.pt"
+model_path = "./trained_models/efficientnet_nosoft_19.pt"
 model = EfficientNet()
 model.load_state_dict(torch.load(
     model_path, map_location=torch.device(device)))
@@ -40,14 +40,14 @@ SWPipeline = SlidingWindowPipeline(
     audio_transform=audio_transform,
     image_transform=image_transform,
     freq_max=12000,
-    threshold_nms=0.5,
+    treshold_nms=0.5,
     device=device
 )
 
-data_path = path_utils.get_train_test_path(
-    path_utils.get_detection_samples_path(), train_test)
-all_audios = [i for i in os.listdir(data_path) if i.endswith(".wav")]
-all_lbls = [i for i in os.listdir(data_path) if not i.endswith(".wav")]
+data_path = path_utils.get_detection_samples_path()
+print(data_path)
+all_audios = [i for i in os.listdir(os.path.join(data_path, 'samples')) if i.endswith(".wav")]
+all_lbls = [i for i in os.listdir(os.path.join(data_path, 'targets')) if not i.endswith(".wav")]
 
 input_lbl = np.load(os.path.join(data_path, all_lbls[0]))
 input_sample, fs = audio_utils.load_audio_file(
