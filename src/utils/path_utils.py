@@ -14,5 +14,8 @@ def get_negative_samples_path():
 def get_hard_samples_path():
   return os.path.join(config.data_path, constants.hard_samples_folder)
 
+def get_detection_samples_path():
+  return os.path.join(config.data_path, constants.detection_samples_folder)
+
 def get_train_test_path(path: str, trainning: bool):
   return os.path.join(path, "train" if trainning else "test")
