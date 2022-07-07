@@ -22,7 +22,7 @@ if __name__ == "__main__":
     classification_model.eval()
 
     window_size = int(22000 * 1)
-    window_overlap = window_size // 50
+    window_overlap = int(window_size // (4/3))
     window_type = "boxcar"
     reshape_size = (129, 129)
     audio_transform = transform_utils.baseline_transform
@@ -70,11 +70,29 @@ if __name__ == "__main__":
     #mAP = metrics_utils.compute_mAP((img_target, bbxs_target), (img_pred, bbxs_pred, score_pred), 0.5)
 
     #print("mAP: ", mAP)
-    file = files[0]
-    audio, fs = audio_utils.load_audio_file(os.path.join(
-        "data/detection_samples/samples", f"{file}.wav"))
-    lbl = np.load(os.path.join(
-        "data/detection_samples/targets", f"{file}.npy"))
+    for file in files:
+        audio, fs = audio_utils.load_audio_file(os.path.join(
+            "data/detection_samples/samples", f"{file}.wav"))
+        lbl = np.load(os.path.join(
+            "data/detection_samples/targets", f"{file}.npy"))
+        bbxs, scores = pipeline(audio)
+        ts, f, spectro = audio_utils.compute_spectrogram(
+            audio, fs, nperseg=256, noverlap=256//4, scale="dB")
+        print(spectro.shape)
+        fig, ax = plt.subplots(1, 1, figsize=(100, 20))
+        ax.imshow(spectro)
+        factor = spectro.shape[-1]/len(audio)
+        print(bbxs)
+        for box in bbxs:
+            x0 = int(box[0]*factor)
+            x1 = int(box[2]*factor)
+            y0 = 0
+            y1 = 128
+            print(x0, x1)
+            ax.add_patch(plt.Rectangle((x0, y0), x1-x0, y1-y0,
+                         fill=False, edgecolor='red', linewidth=2))
+
+    plt.savefig(f"bbxs_pred_{file}.png")
 
     bbxs, scores = pipeline(audio)
 
