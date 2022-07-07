@@ -1,7 +1,4 @@
 import torch
-from torch import nn
-import tensorflow as tf
-import numpy as np
 from sklearn.metrics import accuracy_score, ConfusionMatrixDisplay, confusion_matrix, recall_score, precision_score, precision_recall_fscore_support
 import matplotlib.pyplot as plt
 from src.models import efficientnet
