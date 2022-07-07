@@ -1,5 +1,3 @@
-import os
-
 from ..preprocessing import dataset
 from ..utils import path_utils
 

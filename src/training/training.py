@@ -1,8 +1,8 @@
 import torch
 from sklearn.metrics import precision_recall_fscore_support
 
-from ...utils import visualization, torch_utils
-from ... import constants
+from ..utils import visualization, torch_utils
+from .. import constants
 
 def train_loop(model, dataloader, optimizer, loss_fn, device):
   size = len(dataloader.dataset)

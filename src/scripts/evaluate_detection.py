@@ -1,13 +1,11 @@
 from src.utils import audio_utils
-import matplotlib.pyplot as plt
 import torch
-import torch.nn as nn
 import torchvision
 import numpy as np
 import os
 from src.pipeline import sliding_window
 from src.utils import transform_utils
-from src.models.baseline_cnn.model import Baseline
+from src.models.baseline_cnn import Baseline
 from src.utils import metrics_utils
 
 

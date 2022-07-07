@@ -1,6 +1,6 @@
 from ..models.efficientnet import EfficientNet
-from ..models.baseline_cnn.model import Baseline
-from ..models.baseline_cnn import training
+from ..models.baseline_cnn import Baseline
+from ..training import training
 from ..utils import torch_utils, transform_utils
 import matplotlib.pyplot as plt
 import torchvision
