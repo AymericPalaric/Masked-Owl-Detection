@@ -92,10 +92,13 @@ Most names are self explainatory and you most probably will only have to interac
 
 # CLI
 Appart from scripts used while initailizing the project, you can use the following commands :
-- `python3 src/scripts/train_classification.py --model_name <model_name>`: to train the classification model
-- `python3 src/scripts/evaluate.py --model_path <path_to_model> --model_name <model_name>`: to evaluate the classification model (get metrics and the confusion matrix)
+- `python3 src/scripts/train_classification.py --model_name <model_name>`: to train the classification model (the base model used is a pretrained efficient net model)
+- `python3 src/scripts/evaluate.py --model_path <path_to_model> --model_name <model_name>`: to evaluate the classification model (get metrics in the terminal and the confusion matrix in a saved png file)
 
 # GUI
 
 To launch the graphic interface, run the command ` python3 -m  streamlit run src/gui/gui.py --server.maxUploadSize 500` at the root of the project. The interface will run in your browser.
+
+You will then have multiple parameters to play with, or to keep to default:
+- 
 # Next Steps and unmerged branches
