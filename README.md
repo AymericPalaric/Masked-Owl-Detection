@@ -11,6 +11,7 @@ You will then have to initiallise the dataset by following thoses steps :
 - Put your positive and raw data in the right folders with all the samples in wav in a single folder (use the move_data and convert_ogg_to_wav scripts if necessary).
 - Download the hard samples from [kaggle](https://www.kaggle.com/competitions/birdclef-2022/data) and place them in the folder.
 - Use the move_data and convert_ogg_to_wav in order to have all the samples in wav in a single folder
+- Use the create_negative_samples script to create the negative samples.
 - Use the split_samples_train_test and compute_mean_std scripts and copy the mean and standart deviation found to the constant file
 
 # Architecture

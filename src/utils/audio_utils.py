@@ -9,11 +9,6 @@ def load_audio_file(file_path: str, sr=None) -> tuple[np.ndarray, int]:
   data, fs = librosa.load(file_path, sr=sr, dtype=np.float32,mono=True)
   return data, fs
 
-def padding_audio(data: np.ndarray, window_size:int) -> np.ndarray:
-  if  data.size % window_size != 0:
-    data = librosa.util.fix_length(data, data.size + window_size - data.size % window_size)
-  return data
-
 def compute_spectrogram(data: np.ndarray, fs: int, nperseg: int, noverlap: int, scale: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
   if scale not in ('linear', 'dB'):
     raise ValueError(f"scale must be either 'linear' or 'dB' got {scale}")

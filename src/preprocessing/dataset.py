@@ -6,6 +6,9 @@ from tqdm import tqdm
 from ..utils import audio_utils
 
 def create_negative_samples(raw_folder: str, output_folder: str, negative_sample_duration: float, n_samples: int, uuid: int, log: bool=True) -> None:
+  """
+  Takes random parts of raw samples to create negative samples.
+  """
   # list all files
   files = [file for file in os.listdir(raw_folder) if file.endswith(".wav")]
   n_files = len(files)
@@ -105,6 +108,11 @@ def split_samples_test_train(positive_samples_folder: str, negative_samples_fold
     f.write(f"{n_hard_samples - n_hard} hard samples in test data\n")
 
 def create_detection_dataset(output_folder: str, raw_folder: str, positive_folder: str, hard_folder: str, detection_duration: float, n_samples: int, uuid: int, call_proportion: float, hard_call_proportion: float, log: bool=True) -> None:
+  """
+  Create the detection dataset composed of samples of the desired lenght. Each sample uses raw and hard samples to create 
+  the background noise and positive samples to create the foreground noise. add_call_raw_data and extract_data functions
+  are used in this process. Outputs the newly created samples along with individual annotations files.
+  """
   # set seed
   np.random.seed(0)
   raw_files = [file for file in os.listdir(raw_folder) if file.endswith(".wav")]
