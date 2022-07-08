@@ -1,6 +1,6 @@
 # Bird Call Detection
 
-Detect Masked owl calls in audio records.
+This project aims at detecting 2 seconds Masked owl calls in 1 hour audio records using Machine Learning. The current version uses a Convolutional Neural Network (CNN) on spectrograms to detect the calls. As a 1h audio is too long to be processed in a single run, the project splits the audio into smaller chunks using a sliding window and classification is perfomed on each chunk. 
 
 # Installation
 
@@ -12,6 +12,7 @@ You will then have to initiallise the dataset by following thoses steps :
 - Download the hard samples from [kaggle](https://www.kaggle.com/competitions/birdclef-2022/data) and place them in the folder.
 - Use the move_data and convert_ogg_to_wav in order to have all the samples in wav in a single folder
 - Use the split_samples_train_test and compute_mean_std scripts and copy the mean and standart deviation found to the constant file
+
 # Architecture
 ```
 .
@@ -89,7 +90,9 @@ Appart from the data and the trained models (where you can also find the output 
 Most names are self explainatory and you most probably will only have to interact with the scripts. You will also wind the config_template.py. Indicate the relative path (from the root) of the data folder and change the name to config_template.py
 
 # CLI
-
+Appart from scripts used while initailizing the project, you can use the following commands :
+- `python3 src/scripts/train_classification.py --model_name <model_name>`: to train the classification model
+- `python3 src/scripts/evaluate.py --model_path <path_to_model> --model_name <model_name>`: to evaluate the classification model (get metrics and the confusion matrix)
 
 # GUI
 
