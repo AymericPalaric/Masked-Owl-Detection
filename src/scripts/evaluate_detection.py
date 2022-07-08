@@ -94,13 +94,4 @@ if __name__ == "__main__":
 
     plt.savefig(f"bbxs_pred_{file}.png")
 
-    bbxs, scores = pipeline(audio)
-
-    ts, f, spectro = audio_utils.compute_spectrogram(
-        audio, fs, nperseg=256, noverlap=256//4, scale="dB")
-    print(spectro.shape)
-    fig, ax = plt.subplots(1, 1, figsize=(100, 20))
-    ax.imshow(spectro)
-    # for box in bbxs:
-
-    #   ax.add_patch(plt.Rectangle())
+    
