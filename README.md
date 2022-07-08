@@ -100,5 +100,20 @@ Appart from scripts used while initailizing the project, you can use the followi
 To launch the graphic interface, run the command ` python3 -m  streamlit run src/gui/gui.py --server.maxUploadSize 500` at the root of the project. The interface will run in your browser.
 
 You will then have multiple parameters to play with, or to keep to default:
-- 
+- The size of the window that will be sliding over the whole audio ;
+- The % of the window size that will correspond to the overlap between 2 consecutive windows ;
+- The threshold to apply to the confidence scores that will filter the false positives.
+
+You can now upload a file, corresponding to a ~1h audio. After the process is completed, the raw spectrogram of the whole audio is displayed, with boxes corresponding to calls detected.
+Below this spectrogram, you will be able to see each of the spectrograms, scores and audio samples corresponding to all the calls detected. The default label for all these samples is **"Positive"**, but you can switch them manually to **"Negative"** if the sample is actually a false positive.
+
+Finally, you will be able to click on the **"Save samples"** button, that will save each of the previous detected calls as WAV files, having the following filenames: `<name_of_the_uploaded_audio>_<beginning_of_the_sample_in_the_1h_audio (in s)>_<duration_of_the_call (in ms)>.wav`.
+It will also create a CSV file (with the name of the uploaded audio) with the following keys (each line corresponds to one positive sample):
+- `call_files`: Names of the audio files of the samples ;
+- `time_stamps`: beginning of the samples in the 1h audio ;
+- `durations`: durations of the samples.
+
+*Don't forget to click on that **"Save samples"** button !*
+-
+Otherwise you won't have any of the positive samples saved on your device.
 # Next Steps and unmerged branches

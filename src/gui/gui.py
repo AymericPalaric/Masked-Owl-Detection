@@ -176,14 +176,16 @@ def save_pos_samples(audios, lbls, fs, uploaded_audio, bbxs, base_absc):
 
 st.title("Masked Owl Detector")
 
-uploaded_audio = st.file_uploader(
-    label='Audio file to analyze', type=['ogg', 'wav'])
+
 window_size = st.number_input(
     "Length of the window used to display samples (in seconds)", 0.75*22000/24000, 3*22000/24000, value=22000/24000, step=0.01)
 window_overlap = st.number_input(
     "Overlap of the windows (percent of the window size)", int(100*0.1), int(100*5/6), value=int(100*3/4), step=1)/100
 score_thresh = st.number_input(
     "Threshold for selecting false positives", 0.85, 0.9999, 0.95, 0.0001)
+
+uploaded_audio = st.file_uploader(
+    label='Audio file to analyze', type=['ogg', 'wav'])
 
 # When a file is uploaded
 if uploaded_audio is not None:
