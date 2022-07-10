@@ -15,7 +15,8 @@ import src.constants as constants
 
 # CONSTANTS
 MAX_DURATION = 12  # max duration for pipeline on cpu = 15s audios
-CLASSIF_MODEL_PATH = "./trained_models/efficientnet-b0_29.pt"
+CLASSIF_MODEL = EfficientNet()
+CLASSIF_MODEL_PATH = "trained_models/efficientnet_nosoft_19.pt"
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 N_SLICES = 2
 # N_BOXES = 10
@@ -32,9 +33,9 @@ def transform_audio_gui(data):
 
 @st.cache
 def load_pipeline(window_size=None, window_overlap=None):
-    classification_model = EfficientNet()
-    classification_model.load_state_dict(torch.load(
-        "trained_models/efficientnet_nosoft_19.pt", map_location=DEVICE))
+    classification_model = CLASSIF_MODEL
+    classification_model.load_state_dict(
+        torch.load(CLASSIF_MODEL_PATH, map_location=DEVICE))
     classification_model.eval()
     window_size = int(
         22000 * 1) if window_size is None else int(window_size*24000)

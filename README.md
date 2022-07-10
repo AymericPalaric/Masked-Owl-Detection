@@ -93,7 +93,14 @@ Most names are self explainatory and you most probably will only have to interac
 # CLI
 Appart from scripts used while initailizing the project, you can use the following commands :
 - `python3 src/scripts/train_classification.py --model_name <model_name>`: to train the classification model (the base model used is a pretrained efficient net model)
-- `python3 src/scripts/evaluate.py --model_path <path_to_model> --model_name <model_name>`: to evaluate the classification model (get metrics in the terminal and the confusion matrix in a saved png file)
+Additional options are available, but set to default values:
+    - `--epochs`: default to 10;
+    - `--batch_size`: default to 64;
+    - `--n_workers`: default to 4 (for parallelization);
+    - `--model_type`: default to 'efficientnet' (additional informations about using an other type of model can be found in a [further section](##add-a-new-model-type))
+    - `--lr`: learning rate, default to $10^{-5}$
+    - `--model_args`: additional arguments that you want to pass to your custom model, synthax is the following in the CLI: `--model_args '{"key_1": "value_1", "key_2": "value_2"}'`
+- `python3 src/scripts/evaluate.py --model_path <path_to_model> --model_name <model_name>`: to evaluate the classification model (get metrics in the terminal and the confusion matrix in a saved png file). Same additional options as the previous script can be added.
 
 # GUI
 
@@ -117,3 +124,10 @@ It will also create a CSV file (with the name of the uploaded audio) with the fo
 -
 Otherwise you won't have any of the positive samples saved on your device.
 # Next Steps and unmerged branches
+
+## Add a new model type
+You can add a custom model type by doing so:
+In the `models/` folder, create a file with a custom name (for example `my_model.py`) containing a class creating your **torch** model (named for example `MyModel(torch.nn.Module)`).
+To use CLI scripts and the GUI, make sure to import and modify the following files:
+- `./src/scripts/train_classification.py` and `./src/scripts/evaluate.py`: import your model and make sure to complete the dictionary `CLASS_MODELS` in both files, and don't forget to call the `--model_type` argument in the CLI.
+- `./src/gui/gui.py`: import your model and modify the `CLASSIF_MODEL` and `CLASSIF_MODEL_PATH` variables, with `CLASSIF_MODEL_PATH` being the path from the root to the weights of your trained model.
