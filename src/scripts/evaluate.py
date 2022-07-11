@@ -10,7 +10,18 @@ import json
 import argparse
 from tqdm import tqdm
 nn = torch.nn
-
+"""
+Script to evaluate quality of prediction of a model previously trained.
+Arguments are:
+    - model_type;
+    - model_name;
+    - model_args;
+    - model_path;
+    - train_test;
+    - batch_size;
+    - num_workers;
+    - output
+"""
 
 # Models available
 CLASS_MODELS = {'efficientnet': EfficientNet, 'baseline_cnn': Baseline}

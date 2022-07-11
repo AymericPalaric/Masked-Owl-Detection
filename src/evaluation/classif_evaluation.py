@@ -10,6 +10,33 @@ from tqdm import tqdm
 class ClassifEvaluator():
     """
     Evaluates a classification model.
+    Attributes:
+    -----------
+        - model_class: base class of the model to be evaluated
+        - device: device to use (see torch.cuda.device)
+        - train_test: whether to evaluate on train or test dataset
+        - batch_size: size of the batches to iterate over
+        - name: basename for the saved files
+        - model_path: path towards weights of the previously trained model
+        - metrics: list of metrics to display in terminal lines
+        - metrics_name: corresponding list of names
+        - num_workers
+        - pin_memory
+
+    Methods:
+    --------
+        - get_preds(thresh=0.5, verbose=False): computes predictions over the given dataset
+            Args:
+                - thresh: threshold used for the classification prediction (if softmax is the last layer of the model)
+                - verbose: whether to display indication on the computation status
+            Returns:
+                tuple(preds, labels, losses)
+
+        - evaluate(): computes metrics over the predictions
+            Returns:
+                - metrics_dict: attribute created to store the pairs {metric_name: metric_value}
+
+        - conf_matrix(): computes and save as png file the confusion matrix.
     """
 
     def __init__(self, model_class, device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu"), model_path=None, train_test='test', batch_size=32, name=None, metrics=None, metrics_name=None, num_workers=4, pin_memory=None, **model_kwargs):
@@ -52,9 +79,9 @@ class ClassifEvaluator():
 
         # Load model weights
         self.model = self.model_class(**self.model_kwargs)
-        self.model.load_state_dict(torch.load(self.model_path, map_location=torch.device(self.device)))
+        self.model.load_state_dict(torch.load(
+            self.model_path, map_location=torch.device(self.device)))
         self.model = self.model.to(self.device)
-
 
     def get_preds(self, thresh=None, verbose=True):
         """
@@ -70,23 +97,23 @@ class ClassifEvaluator():
                 x = x.to(self.device)
                 y = y.to(self.device)
                 preds = self.model(x)
-                
+
                 if thresh is not None:
-                    preds[preds>=thresh]=1
-                    preds[preds<thresh]=0
-                
-                preds=torch.argmax(preds, dim=1)
+                    preds[preds >= thresh] = 1
+                    preds[preds < thresh] = 0
+
+                preds = torch.argmax(preds, dim=1)
 
                 self.preds.extend(preds.cpu().numpy())
                 self.labels.extend(y.cpu().numpy())
                 #self.losses.append(self.model.loss(preds, y).item())
         return (self.preds, self.labels, self.losses)
 
-    def evaluate(self, thresh=None, verbose = True):
+    def evaluate(self, thresh=None, verbose=True):
         """
         Evaluate the model.
         """
-        
+
         self.model.eval()
         self.metrics = self.metrics if self.metrics is not None else [
             accuracy_score, recall_score, precision_score, lambda true, pred: precision_recall_fscore_support(true, pred, average='binary')]
@@ -113,7 +140,8 @@ class ClassifEvaluator():
 
         # plt.matshow(conf_mx)
         ConfusionMatrixDisplay.from_predictions(labels, preds, normalize=None)
-        plt.savefig("trained_models/conf_matrix_"+self.name+f"_{int(100*thresh)}.png")
+        plt.savefig("trained_models/conf_matrix_" +
+                    self.name+f"_{int(100*thresh)}.png")
 
 
 if __name__ == '__main__':

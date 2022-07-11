@@ -10,7 +10,7 @@ warnings.filterwarnings('ignore')
 
 class EfficientNet(nn.Module):
     """
-    EfficientNet model
+    EfficientNet model implemented from pretrained weights (torch hub)
     """
 
     def __init__(self, num_classes=2):

@@ -8,6 +8,18 @@ import torch
 import json
 import argparse
 nn = torch.nn
+"""
+Script to train an implemented model.
+Arguments are:
+    - epochs;
+    - batch_size;
+    - n_workers;
+    - reshape_size;
+    - model_type;
+    - model_name;
+    - lr;
+    - model_args.
+"""
 
 
 # Models available

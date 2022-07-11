@@ -5,15 +5,14 @@ import numpy as np
 import os
 from src.pipeline import sliding_window
 from src.utils import transform_utils
-<<<<<<< HEAD
 from src.models.baseline_cnn import Baseline
-=======
-from src.models.baseline_cnn.model import Baseline
 from src.models.efficientnet import EfficientNet
->>>>>>> classif_eval
 from src.utils import metrics_utils
 from src import constants
-import numpy as np
+import matplotlib.pyplot as plt
+"""
+Script to evaluate the quality of detection of a previously trained classification model combined with a sliding window pipeline.
+"""
 
 
 if __name__ == "__main__":
@@ -95,5 +94,3 @@ if __name__ == "__main__":
                          fill=False, edgecolor='red', linewidth=2))
 
     plt.savefig(f"bbxs_pred_{file}.png")
-
-    
