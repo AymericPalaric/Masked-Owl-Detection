@@ -88,7 +88,7 @@ def clip_audio(data: np.ndarray, fs: int, duration: float) -> np.ndarray:
     return data[:int(duration * fs)]
 
 
-def cwt_roi(s, fs, flims=(1500, 3000), tlen=2, th=1e-8):
+def cwt_roi(s, fs, flims=(1500, 3000), tlen=2, th=1e-7):
     df = maad.rois.find_rois_cwt(s, fs, flims, tlen, th)
     if len(df) == 0:
         return None
