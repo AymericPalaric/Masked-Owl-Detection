@@ -6,11 +6,36 @@ import maad
 
 
 def load_audio_file(file_path: str, sr=None) -> tuple[np.ndarray, int]:
+    """
+    Loads a wav file as numpy array.
+
+    Args:
+    -----
+        - file_path (str): path towards the wav file to load;
+        - sr (float): sampling rate to use if resampling audio
+
+    Returns:
+    --------
+        - data (np.ndarray): wav file loaded, shape=`(n_samples,)`
+        -
+    """
     data, fs = librosa.load(file_path, sr=sr, dtype=np.float32, mono=True)
     return data, fs
 
 
 def padding_audio(data: np.ndarray, window_size: int) -> np.ndarray:
+    """
+    Pads the array given to make it match a whole number of the same window.
+
+    Args:
+    -----
+        - data (np.ndarray): data to pad
+        - window_size (int): number of samples corresponding to the window length
+
+    Returns:
+    --------
+        - data (np.ndarray): padded data
+    """
     if data.size % window_size != 0:
         data = librosa.util.fix_length(
             data, data.size + window_size - data.size % window_size)

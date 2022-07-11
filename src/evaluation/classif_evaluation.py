@@ -10,6 +10,7 @@ from tqdm import tqdm
 class ClassifEvaluator():
     """
     Evaluates a classification model.
+
     Attributes:
     -----------
         - model_class: base class of the model to be evaluated

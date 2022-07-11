@@ -56,6 +56,7 @@ def train_loop(model, dataloader: torch.utils.data.DataLoader, optimizer, loss_f
 def test_loop(dataloader, model, loss_fn, device):
     """ Testing loop for whole test dataset.
     Basic metrics are fixed to use: loss, precision, recall and f1-score.
+    
     Args:
     -----
       - model: the model to train
