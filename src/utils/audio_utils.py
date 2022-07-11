@@ -43,6 +43,22 @@ def padding_audio(data: np.ndarray, window_size: int) -> np.ndarray:
 
 
 def compute_spectrogram(data: np.ndarray, fs: int, nperseg: int, noverlap: int, scale: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Computes classic spectrogram.
+
+    Args:
+    -----
+        - data (np.ndarray): array of the audio, shape = `(n_samples,)`
+        - fs (int): sampling frequency
+        - nperseg (int): length of each segment
+        - noverlap (int): number of overlapping samples
+        - scale (str): 'linear' or 'dB'
+
+    Returns:
+    --------
+        - (freq, time, Sxx): lists of frequencies and times, and matrix of intensities for each pair of freq and time.
+    """
+
     if scale not in ('linear', 'dB'):
         raise ValueError(f"scale must be either 'linear' or 'dB' got {scale}")
 
@@ -78,4 +94,13 @@ def cwt_roi(s, fs, flims=(1000, 3000), tlen=2, th=1e-6):
 
 
 def save_audio_file(file_path: str, data: np.ndarray, fs: int) -> None:
+    """
+    Saves the given as a wav file.
+
+    Args:
+    -----
+        - file_path (str): path in which to store the saved wav file
+        - data (np.ndarray): audio array
+        - fs (int): sampling frequency
+    """
     wavfile.write(filename=file_path, rate=fs, data=data)

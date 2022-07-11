@@ -6,6 +6,33 @@ from . import audio_utils, path_utils
 from .. import constants
 
 class ClassifDataset(torch.utils.data.Dataset):
+  """
+  Classification dataset.
+
+  Parameters:
+  -----------
+    - positive_path: str, path to the positive dataset.
+    - negative_path: str, path to the negative dataset.
+    - hard_path: str, path to the hard dataset.
+    - transform_audio: torchvision.transforms.Compose, audio transformation.
+    - transform_image: torchvision.transforms.Compose, image transformation.
+  
+  Attributes:
+  -----------
+    - positive_path: str, path to the positive dataset.
+    - negative_path: str, path to the negative dataset.
+    - hard_path: str, path to the hard dataset.
+    - positive_files: list, list of positive files.
+    - negative_files: list, list of negative files.
+    - hard_files: list, list of hard files.
+    - transform_audio: torchvision.transforms.Compose, audio transformation.
+    - transform_image: torchvision.transforms.Compose, image transformation.
+  
+  Methods:
+  --------
+    - __len__: returns the length of the dataset.
+    - __getitem__: returns the item at the given index.
+  """
 
   def __init__(self, positive_path, negative_path, hard_path, transform_audio, transform_image):
     self.positive_path = positive_path
