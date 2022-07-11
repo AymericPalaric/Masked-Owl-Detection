@@ -47,9 +47,11 @@ def clip_audio(data: np.ndarray, fs: int, duration: float) -> np.ndarray:
     return data[:int(duration * fs)]
 
 
-def cwt_roi(s, fs, flims=(1000, 3000), tlen=2, th=1e-6):
+def cwt_roi(s, fs, flims=(1500, 4000), tlen=2, th=1e-7):
     df = maad.rois.find_rois_cwt(s, fs, flims, tlen, th)
-    return df.iloc[:, np.r_[1, 3]].to_numpy()
+    rois = df.iloc[:, np.r_[1, 3]].to_numpy()
+    rois =[np.int32(roi*fs) for roi in rois]
+    return rois
 
 
 def save_audio_file(file_path: str, data: np.ndarray, fs: int) -> None:

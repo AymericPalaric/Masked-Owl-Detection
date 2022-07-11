@@ -3,24 +3,21 @@ import torch
 import torchvision
 import numpy as np
 import os
-from src.pipeline import sliding_window
+from src.pipeline import sliding_window, roi_window
 from src.utils import transform_utils
-<<<<<<< HEAD
 from src.models.baseline_cnn import Baseline
-=======
-from src.models.baseline_cnn.model import Baseline
 from src.models.efficientnet import EfficientNet
->>>>>>> classif_eval
 from src.utils import metrics_utils
 from src import constants
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 if __name__ == "__main__":
-
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     classification_model = EfficientNet()
     classification_model.load_state_dict(torch.load(
-        "trained_models/efficientnet_nosoft_19.pt"))
+        "trained_models/efficientnet_nosoft_19.pt",map_location=device))
     classification_model.eval()
 
     window_size = int(22000 * 1)
@@ -33,39 +30,38 @@ if __name__ == "__main__":
 
     freq_max = 12000
     treshold_nms = 0.5
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    pipeline = sliding_window.SlidingWindowPipeline(
+    pipeline = roi_window.RoiWindowPipeline(
         window_size, window_overlap, window_type, classification_model, audio_transform, image_transform, freq_max, treshold_nms, device)
 
     time_scale = 1 / (256 - 256//4)
 
     files = [file[:-4]
              for file in os.listdir("data/detection_samples/samples") if file.endswith(".wav")][:5]
-    audios = list()
-    img_target = list()
-    bbxs_target = list()
-    for k, file in enumerate(files):
-        audio_path = os.path.join(
-            "data/detection_samples/samples", f"{file}.wav")
-        bbxs_path = os.path.join(
-            "data/detection_samples/targets", f"{file}.npy")
-        audio, _ = audio_utils.load_audio_file(audio_path)
-        bbxs = np.load(bbxs_path)
+    # audios = list()
+    # img_target = list()
+    # bbxs_target = list()
+    # for k, file in enumerate(files):
+    #     audio_path = os.path.join(
+    #         "data/detection_samples/samples", f"{file}.wav")
+    #     bbxs_path = os.path.join(
+    #         "data/detection_samples/targets", f"{file}.npy")
+    #     audio, _ = audio_utils.load_audio_file(audio_path)
+    #     bbxs = np.load(bbxs_path)
 
-        audios.append(audio)
+    #     audios.append(audio)
 
-        for bbx in bbxs:
-            if bbx[0] == 1:
-                img_target.append(k)
-                bbxs_target.append(
-                    [int(bbx[1] * time_scale), 0, int(bbx[2] * time_scale), freq_max])
-    cropping_len = min([len(audio) for audio in audios])
-    audios = [audio[:cropping_len] for audio in audios]
-    audios = np.stack(audios)
-    img_target = torch.tensor(img_target, dtype=torch.long)
-    bbxs_target = torch.tensor(bbxs_target, dtype=torch.long)
+    #     for bbx in bbxs:
+    #         if bbx[0] == 1:
+    #             img_target.append(k)
+    #             bbxs_target.append(
+    #                 [int(bbx[1] * time_scale), 0, int(bbx[2] * time_scale), freq_max])
+    # cropping_len = min([len(audio) for audio in audios])
+    # audios = [audio[:cropping_len] for audio in audios]
+    # audios = np.stack(audios)
+    # img_target = torch.tensor(img_target, dtype=torch.long)
+    # bbxs_target = torch.tensor(bbxs_target, dtype=torch.long)
 
-    #img_pred, bbxs_pred, score_pred = pipeline(audios)
+    # #img_pred, bbxs_pred, score_pred = pipeline(audios)
     # print(bbxs_pred)
     # print(10*"=")
     # print(score_pred)
@@ -80,20 +76,16 @@ if __name__ == "__main__":
         bbxs, scores = pipeline(audio)
         ts, f, spectro = audio_utils.compute_spectrogram(
             audio, fs, nperseg=256, noverlap=256//4, scale="dB")
-        print(spectro.shape)
         fig, ax = plt.subplots(1, 1, figsize=(100, 20))
         ax.imshow(spectro)
         factor = spectro.shape[-1]/len(audio)
-        print(bbxs)
         for box in bbxs:
             x0 = int(box[0]*factor)
             x1 = int(box[2]*factor)
             y0 = 0
             y1 = 128
-            print(x0, x1)
             ax.add_patch(plt.Rectangle((x0, y0), x1-x0, y1-y0,
                          fill=False, edgecolor='red', linewidth=2))
-
-    plt.savefig(f"bbxs_pred_{file}.png")
+        plt.savefig(f"bbxs_pred_{file}.png")
 
     
