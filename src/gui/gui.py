@@ -229,6 +229,7 @@ if uploaded_audio is not None:
     if st.checkbox("Show entire raw spectrogtam", value=True):
         fig, ax = plt.subplots()
         x_max, y_max = spectro.shape
+        print(x_max, y_max)
         ax.matshow(spectro, aspect=750)  # , extent=[
         # 0, y_max/fs, 0, x_max])
         ax.axes.get_yaxis().set_visible(False)
