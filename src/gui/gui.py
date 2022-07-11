@@ -3,6 +3,7 @@ import streamlit.components.v1 as components
 from src.models.efficientnet import EfficientNet
 from src.utils import audio_utils, metrics_utils, transform_utils, torch_utils
 from src.pipeline import sliding_window
+from src.pipeline import roi_window
 import matplotlib.pyplot as plt
 import torchvision
 import numpy as np
@@ -49,7 +50,7 @@ def load_pipeline(window_size=None, window_overlap=None):
     freq_max = 12000
     treshold_nms = 0.5
     device = DEVICE
-    pipeline = sliding_window.SlidingWindowPipeline(
+    pipeline = roi_window.RoiWindowPipeline(
         window_size, window_overlap, window_type, classification_model, audio_transform, image_transform, freq_max, treshold_nms, device)
     time_scale = 1 / (256 - 256//4)
 
@@ -152,7 +153,7 @@ def save_pos_samples(audios, lbls, fs, uploaded_audio, bbxs, base_absc):
                 f"./data/gui_storage/{base_name}_{int(base_absc[i]/fs+x0)}_{(x1-x0)*1000}.wav", audios[i], fs)
 
             line = {
-                "call_files": f"{base_name}_{int(base_absc[i]/fs+x0)}_{(x1-x0)*1000}.wav",
+                "call_files": f"{base_name }_{int(base_absc[i]/fs+x0)}_{(x1-x0)*1000}.wav",
                 "time_stamps": int(base_absc[i]/fs+x0),
                 "durations": (x1-x0)*1000
             }

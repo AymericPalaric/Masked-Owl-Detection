@@ -54,8 +54,14 @@ class   RoiWindowPipeline():
     def get_windows(self, data: np.ndarray):
         windows = list()
         idxs = list()
-        for i in self.roi_window(data):
+        rois= self.roi_window(data)
+        if not rois:
+            rois = range(0, data.shape[0] - self.window_size, self.window_size - self.window_overlap)
+            print("no roi found so we iterate over the whole data")
+        for i in rois:
             pad=int((self.window_size-self.window_overlap))
+            if i*pad+self.window_size > data.shape[0]:
+                break
             window = data[i*pad:i*pad+self.window_size]
             window = window * self.window
             window = self.audio_transform(window)
