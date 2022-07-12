@@ -12,6 +12,7 @@ from torch import nn
 import os
 from csv import DictWriter
 import src.constants as constants
+import matplotlib as mpl
 
 
 # CONSTANTS
@@ -118,7 +119,14 @@ def pipeline_on_slice(pipeline, slice_audio):
         y0 = 0
         y1 = 128
         ax.matshow(slice_spectro[:, x0:x1])
-
+        mjrxFormatter=lambda x,pos : "{:.1f}".format(x/(factor*fs))
+        mjryFormatter=lambda y,pos : "{:.0f}".format(y*12000/spectro.shape[0])
+        ax.axes.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(mjrxFormatter)) 
+        ax.axes.xaxis.set_ticks_position('bottom')
+        ax.axes.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(mjryFormatter)) 
+        ax.axes.invert_yaxis()
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Frequency (Hz)")
         figs.append(fig)
         axs.append(ax)
 
@@ -229,12 +237,16 @@ if uploaded_audio is not None:
 
     if st.checkbox("Show entire raw spectrogtam", value=True):
         fig, ax = plt.subplots()
-        x_max, y_max = spectro.shape
-        print(x_max, y_max)
-        ax.matshow(spectro, aspect=750)  # , extent=[
-        # 0, y_max/fs, 0, x_max])
-        ax.axes.get_yaxis().set_visible(False)
+        ax.matshow(spectro, aspect=750)
         factor = spectro.shape[-1]/len(audio)
+        mjrxFormatter=lambda x,pos : "{:.0f}".format(x/(factor*fs))
+        mjryFormatter=lambda y,pos : "{:.0f}".format(y*12000/spectro.shape[0])
+        ax.axes.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(mjrxFormatter)) 
+        ax.axes.xaxis.set_ticks_position('bottom')
+        ax.axes.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(mjryFormatter)) 
+        ax.axes.invert_yaxis()
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Frequency (Hz)")
         for i, box in enumerate(boxes):
             x0 = int(box[0]*factor) + int(base_absc[i]*factor)
             x1 = int(box[2]*factor) + int(base_absc[i]*factor)
