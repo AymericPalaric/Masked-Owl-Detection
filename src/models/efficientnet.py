@@ -2,7 +2,6 @@ import torch
 from torch import nn
 import warnings
 from efficientnet_pytorch import EfficientNet as EfficientNet_Pytorch
-from torchsummary import summary
 warnings.filterwarnings('ignore')
 
 
@@ -40,5 +39,3 @@ if __name__ == '__main__':
         "cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     print(device)
-    summary(model, input_size=(3, 129, 129))
-    model.to(device)
