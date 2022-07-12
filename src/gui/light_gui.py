@@ -144,12 +144,12 @@ for u, uploaded_audio in enumerate(uploaded_audios):
             radio_lbl = st.radio("Label of the sample", [
                 "Negative", "Positive"], index=1, horizontal=True, key=f"radio_subbox_{u}_{i}")
             lbls[i] = radio_lbl
+    if n_calls > 0:
+        if st.button(f"Save samples for record number {u+1}"):
+            save_pos_samples(temp_audios, lbls, FS,
+                             uploaded_audio, boxes, base_absc)
 
-    if st.button(f"Save samples for record number {u+1}"):
-        save_pos_samples(temp_audios, lbls, FS,
-                         uploaded_audio, boxes, base_absc)
-
-        st.text(f"Saved samples from audio {uploaded_audio.name} !")
+            st.text(f"Saved samples from audio {uploaded_audio.name} !")
 
 
 if st.button("Quit the app"):
