@@ -1,8 +1,7 @@
 import argparse
-from ..evaluation.classif_evaluation import ClassifEvaluator
-from ..models.efficientnet import EfficientNet
-from ..models.baseline_cnn import Baseline
-from ..utils import torch_utils, transform_utils
+from src.evaluation.classif_evaluation import ClassifEvaluator
+from src.models.efficientnet import EfficientNet
+from src.models.baseline_cnn import Baseline
 import matplotlib.pyplot as plt
 import torchvision
 import torch

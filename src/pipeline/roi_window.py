@@ -6,13 +6,14 @@ from unittest import result
 from scipy import signal
 import torch
 import torchvision
-from ..utils.audio_utils import cwt_roi
-from .. import constants
+from src.utils.audio_utils import cwt_roi
+from src import constants
 
 if TYPE_CHECKING:
     import numpy as np
 
-class   RoiWindowPipeline():
+
+class RoiWindowPipeline():
 
     def __init__(self, window_size: int, window_overlap: int, window_type: str, classification_model, audio_transform, image_transform, freq_max, treshold_nms, device) -> None:
         self.window_size = window_size
@@ -30,43 +31,43 @@ class   RoiWindowPipeline():
             self.window_type, self.window_size)
 
     def forward(self, data: np.ndarray) -> tuple[torch.Tensor, torch.Tensor]:
-        
+
         output = self.get_windows(data)
         if not output:
             return list(), list()
         else:
-            windows,idxs = output
-            windows=windows.to(torch.float32).to(self.device)
+            windows, idxs = output
+            windows = windows.to(torch.float32).to(self.device)
             self.classification_model.eval()
             predictions = torch.nn.functional.softmax(
                 self.classification_model(windows), dim=1)
-            bbxs, scores = self.convert_predictions_to_bbx(predictions,idxs)
+            bbxs, scores = self.convert_predictions_to_bbx(predictions, idxs)
             bbxs, scores = self.apply_nms(bbxs, scores, self.treshold_nms)
             return bbxs, scores
 
     def roi_window(self, data: np.ndarray):
-        rois=cwt_roi(data,24000)
-        windows_indexes=[]
+        rois = cwt_roi(data, 24000)
+        windows_indexes = []
         if rois:
             for roi in rois:
                 start_index = roi[0]//(self.window_size-self.window_overlap)
                 windows_indexes.append(start_index)
-                if (roi[1]-roi[0])%(self.window_size-self.window_overlap)==0:
+                if (roi[1]-roi[0]) % (self.window_size-self.window_overlap) == 0:
                     pass
                 else:
-                    for i in range(start_index+1,start_index+((roi[1]-roi[0])//(self.window_size-self.window_overlap))+1):
+                    for i in range(start_index+1, start_index+((roi[1]-roi[0])//(self.window_size-self.window_overlap))+1):
                         windows_indexes.append(i)
         return windows_indexes
 
     def get_windows(self, data: np.ndarray):
         windows = list()
         idxs = list()
-        rois= self.roi_window(data)
+        rois = self.roi_window(data)
         if not rois:
             return None
         else:
             for i in rois:
-                pad=int((self.window_size-self.window_overlap))
+                pad = int((self.window_size-self.window_overlap))
                 if i*pad+self.window_size > data.shape[0]:
                     break
                 window = data[i*pad:i*pad+self.window_size]
@@ -75,9 +76,7 @@ class   RoiWindowPipeline():
                 window: torch.Tensor = self.image_transform(window)
                 idxs.append(i*pad)
                 windows.append(window)
-            return torch.stack(windows, dim=0),idxs
-
-
+            return torch.stack(windows, dim=0), idxs
 
     def convert_predictions_to_bbx(self, predictions: torch.Tensor, idxs: list):
         bbxs = list()
@@ -88,8 +87,7 @@ class   RoiWindowPipeline():
                 bbxs.append([idx_start, 0, idx_start +
                             self.window_size, self.freq_max])
                 scores.append(predictions[i, constants.positive_label])
-        
-        
+
         return torch.tensor(bbxs, dtype=torch.float32), torch.tensor(scores, dtype=torch.float32)
 
     def apply_nms(self, bbxs: torch.Tensor, scores: torch.Tensor, threshold: float):
@@ -122,4 +120,3 @@ class   RoiWindowPipeline():
         # if datas.ndim == 2:
         #     return self.batched_forward(datas)
         return self.forward(datas)
-

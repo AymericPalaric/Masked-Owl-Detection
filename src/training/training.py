@@ -1,8 +1,8 @@
 import torch
 from sklearn.metrics import precision_recall_fscore_support
 
-from ..utils import visualization, torch_utils
-from .. import constants
+from src.utils import visualization, torch_utils
+from src import constants
 
 
 def train_loop(model, dataloader: torch.utils.data.DataLoader, optimizer, loss_fn, device):
@@ -56,7 +56,7 @@ def train_loop(model, dataloader: torch.utils.data.DataLoader, optimizer, loss_f
 def test_loop(dataloader, model, loss_fn, device):
     """ Testing loop for whole test dataset.
     Basic metrics are fixed to use: loss, precision, recall and f1-score.
-    
+
     Args:
     -----
       - model: the model to train

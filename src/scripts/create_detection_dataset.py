@@ -1,7 +1,7 @@
 import argparse
 import os
-from ..preprocessing import dataset
-from ..utils import path_utils
+from src.preprocessing import dataset
+from src.utils import path_utils
 
 if __name__ == "__main__":
 

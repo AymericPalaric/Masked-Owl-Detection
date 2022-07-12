@@ -1,4 +1,4 @@
-from . import audio_utils
+from src.utils import audio_utils
 import numpy as np
 
 

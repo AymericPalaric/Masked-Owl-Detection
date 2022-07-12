@@ -6,7 +6,7 @@ from scipy import signal
 import torch
 import torchvision
 
-from .. import constants
+from src import constants
 
 if TYPE_CHECKING:
     import numpy as np
@@ -58,8 +58,7 @@ class SlidingWindowPipeline():
                 bbxs.append([idx_start, 0, idx_start +
                             self.window_size, self.freq_max])
                 scores.append(predictions[i, constants.positive_label])
-        
-        
+
         return torch.tensor(bbxs, dtype=torch.float32), torch.tensor(scores, dtype=torch.float32)
 
     def apply_nms(self, bbxs: torch.Tensor, scores: torch.Tensor, threshold: float):
@@ -75,7 +74,7 @@ class SlidingWindowPipeline():
         for k, data in enumerate(datas):
             bbxs, scores = self.forward(data)
             im_idxs.extend([k for _ in range(len(scores))])
-            #if len(bbxs) != 0:
+            # if len(bbxs) != 0:
             #    full_bbxs.append(bbxs)
             #    full_scores.append(scores)
             full_bbxs.append(bbxs)
@@ -88,4 +87,3 @@ class SlidingWindowPipeline():
         if datas.ndim == 2:
             return self.batched_forward(datas)
         return self.forward(datas)
-
