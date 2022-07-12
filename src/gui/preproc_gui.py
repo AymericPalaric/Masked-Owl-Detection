@@ -1,13 +1,12 @@
 from src.models.efficientnet import EfficientNet
-from src.utils import audio_utils, metrics_utils, transform_utils, torch_utils
-from src.pipeline import sliding_window, roi_window
+from src.utils import audio_utils, transform_utils
+from src.pipeline import roi_window
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import torchvision
 import numpy as np
 import torch
 import os
-from csv import DictWriter
 import argparse
 import src.constants as constants
 
@@ -21,13 +20,6 @@ N_SLICES = 2
 # N_BOXES = 10
 
 # Utils functions
-
-
-def transform_audio_gui(data):
-    _, _, specto = audio_utils.compute_spectrogram(
-        data, 24000, nperseg=256, noverlap=256//4, scale="dB")
-    # specto = specto[:120, :]
-    return np.stack((specto,)*3, axis=0)
 
 
 def load_pipeline(window_size=None, window_overlap=None):
@@ -92,7 +84,7 @@ def collate_boxes(bbxs: torch.Tensor, scores: torch.Tensor):
         return true_bbxs, true_scores
 
     else:
-        return bbxs.numpy(), scores.numpy()
+        return [b.numpy() for b in bbxs], [s.numpy() for s in scores]
 
 
 def pred_bbxs(pipeline, slice_audio):
@@ -109,7 +101,7 @@ def pipeline_on_slice(pipeline, slice_audio):
     figs, axs = [], []
     for i, box in enumerate(bbxs):
         fig, ax = plt.subplots()
-
+        ax.axis('off')
         x0 = int(box[0]*factor)
         x1 = int(box[2]*factor)
         y0 = 0
@@ -135,131 +127,94 @@ def load_audio_spectro(uploaded_audio):
     return audio, spectro, fs
 
 
-def save_pos_samples(audios, lbls, fs, uploaded_audio, bbxs, base_absc):
-    # Save boxes containing calls and the corresponding CSV
-    base_name = uploaded_audio.name[:-4]
-    csv = []
-    for i in range(len(audios)):
-        if lbls[i] == "Positive":
-            box = bbxs[i]
-            x0 = box[0]/fs
-            x1 = box[2]/fs
-            audio_utils.save_audio_file(
-                f"./data/gui_storage/{base_name}_{int(base_absc[i]/fs+x0)}_{(x1-x0)*1000}.wav", audios[i], fs)
-
-            line = {
-                "call_files": f"{base_name}_{int(base_absc[i]/fs+x0)}_{(x1-x0)*1000}.wav",
-                "time_stamps": int(base_absc[i]/fs+x0),
-                "durations": (x1-x0)*1000
-            }
-            csv.append(line)
-
-    with open(f"./data/gui_storage/{base_name}.csv", "w") as c:
-        w = DictWriter(c, line.keys())
-        w.writeheader()
-        w.writerows(csv)
-
-    # Remove temporary audios
-    temp_files = [file for file in os.listdir(
-        './data/gui_storage/') if file.startswith("temp_sub_audio")]
-    for i in temp_files:
-        os.remove(os.path.join('./data/gui_storage/', i))
-
-
 # =====================================
 # ========== MAIN FUNCTION ============
-if __name__ == "__main__":
+parser = argparse.ArgumentParser()
+parser.add_argument("--input_path", type=str, required=True)
+parser.add_argument("--output_path", type=str, required=True)
+parser.add_argument("--win_size", type=float, required=False,
+                    help="Window size (in sec)", default=22000/24000)
+parser.add_argument("--win_overlap", type=int, required=False,
+                    help="Window overlap (percent of the window size)", default=int(100*3/4))
+parser.add_argument("--score_thresh", type=float, required=False,
+                    help="Threshold for selecting false positives (between 0 and 1)", default=0.95)
+args = parser.parse_args()
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--audio_folder", type=str, required=False,
-                        help="Path to the audio files", default='./data/detection_samples/')
-    parser.add_argument("--output_folder", type=str, required=False,
-                        help="Path to the output folder", default='./data/gui_storage/test_folder/')
-    parser.add_argument("--win_size", type=float, required=False,
-                        help="Window size (in sec)", default=22000/24000)
-    parser.add_argument("--win_overlap", type=int, required=False,
-                        help="Window overlap (percent of the window size)", default=int(100*3/4))
-    parser.add_argument("--score_thresh", type=float, required=False,
-                        help="Threshold for selecting false positives (between 0 and 1)", default=0.95)
-    args = parser.parse_args()
+window_size = args.win_size
+window_overlap = args.win_overlap/100
+score_thresh = args.score_thresh
+uploaded_audio_path = args.input_path
+output_folder = args.output_path
+# Create output folder if it doesn't exist
+if not os.path.exists(output_folder):
+    os.mkdir(output_folder)
+uploaded_audios_files = [i for i in os.listdir(
+    uploaded_audio_path) if i.endswith(".wav")]
+print(f"Found {len(uploaded_audios_files)} audio files")
 
-    window_size = args.win_size
-    window_overlap = args.win_overlap/100
-    score_thresh = args.score_thresh
 
-    uploaded_audio_path = args.audio_folder
-    output_folder = args.output_folder
+for u, uploaded_audio in enumerate(uploaded_audios_files):
+    print(f"Analyzing audio file nb {u+1} ({uploaded_audio[:-4]})...")
+    audio, spectro, fs = load_audio_spectro(
+        os.path.join(uploaded_audio_path, uploaded_audio))
+    pipeline = load_pipeline(window_size, window_overlap)
+    figs, axs, boxes, scores = [], [], [], []
+    total_len = len(audio)
+    sub_audios = cut_audio(audio, fs)
+    base_absc = []
+    pos_audios = []
+    file_count = 0
+    for i in tqdm(range(len(sub_audios))):
+        slice_audio = sub_audios[i]
+        fig, ax, bbxs, score = pipeline_on_slice(pipeline, slice_audio)
+        if len(bbxs) > 0:
+            base_absc += [i*len(slice_audio)
+                          for j in range(len(bbxs)) if score[j] > score_thresh]
+            for j, box in enumerate(bbxs):
+                if score[j] > score_thresh:
+                    audio_utils.save_audio_file(
+                        f"{output_folder}/temp_sub_audio_{uploaded_audio[:-4]}_{file_count}.wav", slice_audio[int(box[0]):int(box[2])], fs)
+                    file_count += 1
+                    pos_audios.append(slice_audio[int(box[0]):int(box[2])])
+            boxes += [bbxs[b]
+                      for b in range(len(bbxs)) if score[b] > score_thresh]
+            scores += [s for s in score if s > score_thresh]
+            figs += [fig[b]
+                     for b in range(len(fig)) if score[b] > score_thresh]
+            axs += [ax[b]
+                    for b in range(len(ax)) if score[b] > score_thresh]
+    np.save(
+        f"{output_folder}/{uploaded_audio[:-4]}_boxes.npy", boxes)
+    np.save(
+        f"{output_folder}/{uploaded_audio[:-4]}_scores.npy", scores)
+    np.save(
+        f"{output_folder}/{uploaded_audio[:-4]}_base_absc.npy", base_absc)
+    print("Done!")
+    print(f"Found {len(boxes)} positive calls")
+    fig, ax = plt.subplots()
+    x_max, y_max = spectro.shape
+    ax.matshow(spectro)  # , extent=[
+    # # 0, y_max/fs, 0, x_max])
+    ax.axes.get_yaxis().set_visible(False)
+    # ax.axis('off')
 
-    # Create output folder if it doesn't exist
-    if not os.path.exists(output_folder):
-        os.mkdir(output_folder)
+    factor = spectro.shape[-1]/len(audio)
+    for i, box in enumerate(boxes):
+        x0 = int(box[0]*factor) + int(base_absc[i]*factor)
+        x1 = int(box[2]*factor) + int(base_absc[i]*factor)
+        y0 = 0
+        y1 = 128
+        ax.add_patch(plt.Rectangle((x0, y0), x1-x0, y1-y0,
+                     fill=False, edgecolor='red', linewidth=1))
+    fig.savefig(
+        f"{output_folder}/{uploaded_audio[:-4]}_raw_spec.png")
 
-    uploaded_audios_files = [i for i in os.listdir(
-        uploaded_audio_path) if i.endswith(".wav")]
-    print(f"Found {len(uploaded_audios_files)} audio files")
+    for i in range(len(boxes)):
+        """
+        **____________________________________________________________________________**
+        """
+        figs[i].savefig(
+            f"{output_folder}/{uploaded_audio[:-4]}_spec_{i}.png")
 
-    # When a file is uploaded
-    for u, uploaded_audio in enumerate(uploaded_audios_files):
-        print(f"Analyzing audio file nb {u+1} ({uploaded_audio[:-4]})...")
-        audio, spectro, fs = load_audio_spectro(
-            os.path.join(uploaded_audio_path, uploaded_audio))
-        pipeline = load_pipeline(window_size, window_overlap)
-
-        figs, axs, boxes, scores = [], [], [], []
-        total_len = len(audio)
-        sub_audios = cut_audio(audio, fs)
-        base_absc = []
-        pos_audios = []
-        file_count = 0
-        for i, slice_audio in tqdm(enumerate(sub_audios)):
-            fig, ax, bbxs, score = pipeline_on_slice(pipeline, slice_audio)
-            if len(bbxs) > 0:
-                base_absc += [i*len(slice_audio)
-                              for j in range(len(bbxs)) if score[j] > score_thresh]
-                for j, box in enumerate(bbxs):
-                    if score[j] > score_thresh:
-                        audio_utils.save_audio_file(
-                            f"{output_folder}/temp_sub_audio_{uploaded_audio[:-4]}_{file_count}.wav", slice_audio[int(box[0]):int(box[2])], fs)
-                        file_count += 1
-                        pos_audios.append(slice_audio[int(box[0]):int(box[2])])
-                boxes += [bbxs[b]
-                          for b in range(len(bbxs)) if score[b] > score_thresh]
-                scores += [s for s in score if s > score_thresh]
-                figs += [fig[b]
-                         for b in range(len(fig)) if score[b] > score_thresh]
-                axs += [ax[b]
-                        for b in range(len(ax)) if score[b] > score_thresh]
-                        
-        np.save(
-            f"{output_folder}/{uploaded_audio[:-4]}_boxes.npy", boxes)
-        np.save(
-            f"{output_folder}/{uploaded_audio[:-4]}_scores.npy", scores)
-        np.save(
-            f"{output_folder}/{uploaded_audio[:-4]}_base_absc.npy", base_absc)
-        print("Done!")
-        print(f"Found {len(boxes)} positive calls")
-
-        fig, ax = plt.subplots()
-        x_max, y_max = spectro.shape
-        ax.matshow(spectro)  # , extent=[
-        # 0, y_max/fs, 0, x_max])
-        ax.axes.get_yaxis().set_visible(False)
-        factor = spectro.shape[-1]/len(audio)
-        for i, box in enumerate(boxes):
-            x0 = int(box[0]*factor) + int(base_absc[i]*factor)
-            x1 = int(box[2]*factor) + int(base_absc[i]*factor)
-            y0 = 0
-            y1 = 128
-            ax.add_patch(plt.Rectangle((x0, y0), x1-x0, y1-y0,
-                         fill=False, edgecolor='red', linewidth=1))
-        fig.savefig(
-            f"{output_folder}/{uploaded_audio[:-4]}_raw_spec.png")
-
-        for i in range(len(boxes)):
-            """
-            **____________________________________________________________________________**
-            """
-            figs[i].savefig(
-                f"{output_folder}/{uploaded_audio[:-4]}_spec_{i}.png")
-    print(
-        f"All audios and figures have been saved in {output_folder}")
+print(
+    f"All audios and figures have been saved in {output_folder}")
