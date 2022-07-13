@@ -4,7 +4,7 @@ This project aims at detecting 2 seconds Masked owl calls in 1 hour audio record
 
 # Installation
 
-To install all the packages required, use the command `pip install -r requirements.twt` at the root of the project. Python 3.9 or later is recomanded.
+To install all the packages required, use the command `pip install -r requirements.txt` at the root of the project. Python 3.9 or later is recomanded.
 
 You will then have to initiallise the dataset by following thoses steps :
 - Create the data folder and the different subfolders and precise the location of the data folder in the config file
@@ -103,8 +103,9 @@ Additional options are available, but set to default values:
 - `python3 src/scripts/evaluate.py --model_path <path_to_model> --model_name <model_name>`: to evaluate the classification model (get metrics in the terminal and the confusion matrix in a saved png file). Same additional options as the previous script can be added.
 
 # GUI
+Two types of GUI are available: a more simple one, launched through a command line, that can only deal with 1 record of 1h at the time, and a more complex one, launched through an executable, that can deal with multiple audio records at the time.
 
-To launch the graphic interface, run the command ` python3 -m  streamlit run src/gui/gui.py --server.maxUploadSize 500` at the root of the project. The interface will run in your browser.
+**To launch the *single file* graphic interface**: run the command ` python3 -m  streamlit run src/gui/gui.py --server.maxUploadSize 500` at the root of the project. The interface will run in your browser.
 
 You will then have multiple parameters to play with, or to keep to default:
 - The size of the window that will be sliding over the whole audio ;
@@ -123,6 +124,12 @@ It will also create a CSV file (with the name of the uploaded audio) with the fo
 *Don't forget to click on that **"Save samples"** button !*
 -
 Otherwise you won't have any of the positive samples saved on your device.
+
+**To launch the *multiple files* graphical interface**: double click on the `GUI.sh` file. This will open a window, preparing the pipeline to process the audios. You will have to enter the absolute path towards the root of the repository. It will then ask you to put an input folder (where the files you want to process are) and an output folder (where you want to save the found calls). **Don't forget to add a `/` at the end of each path, so that this will be interpreted as a valid folder path!**
+You will then see the progress over the processing of each one of the files found at the input folder.
+After all processes are done, it will open a window in your browser (similar to the previous GUI) in which you will be able to see each of the found samples and validate them. Again, **don't forget to click on the "Save samples" buttons for each files**.
+Finally, when you are done saving the positive calls, click on the "Quit" button to clear all temporary files and stop the execution of the app. You can now close this window and stop the script.
+
 # Next Steps and unmerged branches
 
 ## Add a new model type

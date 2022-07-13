@@ -57,6 +57,33 @@ class AudioFile():
 # ===================================
 
 
+@st.cache(suppress_st_warning=True)
+def render_boxes(audio: AudioFile, i, score):
+    text = f"Confidence: {score}"
+    image = STORAGE_PATH + f"{audio.name}_spec_{i}.png"
+    audio = STORAGE_PATH+f"temp_sub_audio_{audio.name}_{i}.wav"
+    return text, image, audio
+
+
+@st.cache
+def load_temp_files(audio: AudioFile):
+    boxes = np.load(
+        f"{STORAGE_PATH}{audio.name}_boxes.npy", allow_pickle=True)
+    scores = np.load(
+        f"{STORAGE_PATH}{audio.name}_scores.npy", allow_pickle=True)
+    base_absc = np.load(
+        f"{STORAGE_PATH}{audio.name}_base_absc.npy", allow_pickle=True)
+
+    calls_spec = [i for i in os.listdir(STORAGE_PATH) if i.startswith(
+        f"{audio.name}_spec")]
+    calls_spec.sort()
+    temp_audios = [i for i in os.listdir(STORAGE_PATH) if i.startswith(
+        f"temp_sub_audio_{audio.name}_")]
+    temp_audios.sort()
+
+    return boxes, scores, base_absc, calls_spec, temp_audios
+
+
 def save_pos_samples(audios, lbls, fs, uploaded_audio: AudioFile, bbxs, base_absc):
     # Save boxes containing calls and the corresponding CSV
     base_name = uploaded_audio.name
@@ -107,12 +134,8 @@ for u, uploaded_audio in enumerate(uploaded_audios):
     f"""
     ## Audio number {u+1} ({uploaded_audio.name}):
     """
-    boxes = np.load(
-        f"{STORAGE_PATH}{uploaded_audio.name}_boxes.npy", allow_pickle=True)
-    scores = np.load(
-        f"{STORAGE_PATH}{uploaded_audio.name}_scores.npy", allow_pickle=True)
-    base_absc = np.load(
-        f"{STORAGE_PATH}{uploaded_audio.name}_base_absc.npy", allow_pickle=True)
+    boxes, scores, base_absc, calls_spec, temp_audios = load_temp_files(
+        uploaded_audio)
 
     if st.checkbox("Show entire raw spectrogtam", value=True, key=f"raw_spectro_{u+1}"):
 
@@ -120,12 +143,7 @@ for u, uploaded_audio in enumerate(uploaded_audios):
                  f"{uploaded_audio.name}_raw_spec.png", width=1000)
 
         st.audio(uploaded_audio.path, format='audio/wav')
-    calls_spec = [i for i in os.listdir(STORAGE_PATH) if i.startswith(
-        f"{uploaded_audio.name}_spec")]
-    calls_spec.sort()
-    temp_audios = [i for i in os.listdir(STORAGE_PATH) if i.startswith(
-        f"temp_sub_audio_{uploaded_audio.name}_")]
-    temp_audios.sort()
+
     # open_all = st.checkbox("Open All", key="open_all", value=True)
     n_calls = len(calls_spec)
     lbls = [0 for i in range(n_calls)]
@@ -135,15 +153,14 @@ for u, uploaded_audio in enumerate(uploaded_audios):
         """
         if st.checkbox(f"Sample {i+1}", key=f"bttn_{u}_{i}", value=True):
             # st.pyplot(figs[i])
-
-            st.text(f"Confidence: {scores[i]}")
-            st.image(STORAGE_PATH +
-                     f"{uploaded_audio.name}_spec_{i}.png", width=800)
-            st.audio(
-                STORAGE_PATH+f"temp_sub_audio_{uploaded_audio.name}_{i}.wav")
+            text, image, audio_ = render_boxes(uploaded_audio, i, scores[i])
+            st.text(text)
+            st.image(image, width=800)
+            st.audio(audio_)
             radio_lbl = st.radio("Label of the sample", [
                 "Negative", "Positive"], index=1, horizontal=True, key=f"radio_subbox_{u}_{i}")
             lbls[i] = radio_lbl
+
     if n_calls > 0:
         if st.button(f"Save samples for record number {u+1}"):
             save_pos_samples(temp_audios, lbls, FS,
@@ -158,4 +175,4 @@ if st.button("Quit the app"):
         STORAGE_PATH) if file.startswith(f"temp_sub_audio_") or file.endswith(".npy") or file.endswith(".png")]
     for file in temp_files:
         os.remove(os.path.join(STORAGE_PATH, file))
-    quit()
+    st.stop()

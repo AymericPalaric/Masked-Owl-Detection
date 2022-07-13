@@ -1,5 +1,8 @@
 #!/bin/bash
-cd /d/Informatique/Python/CS/DTY/P3/masked-owl-detection
+echo "What is the ABSOLUTE path to the root of the project?"
+read root_path
+
+cd $root_path
 
 conda init bash -q
 

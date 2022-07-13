@@ -11,6 +11,7 @@ import argparse
 import src.constants as constants
 import matplotlib as mpl
 
+mpl.use('Agg')
 
 # CONSTANTS
 MAX_DURATION = 15  # max duration for pipeline on cpu = 15s audios
@@ -102,7 +103,6 @@ def pipeline_on_slice(pipeline, slice_audio):
     figs, axs = [], []
     for i, box in enumerate(bbxs):
         fig, ax = plt.subplots()
-        ax.axis('off')
         x0 = int(box[0]*factor)
         x1 = int(box[2]*factor)
         y0 = 0
@@ -204,7 +204,7 @@ for u, uploaded_audio in enumerate(uploaded_audios_files):
     print(f"Found {len(boxes)} positive calls")
     fig, ax = plt.subplots()
     x_max, y_max = spectro.shape
-    ax.matshow(spectro)
+    ax.matshow(spectro, aspect=750)
 
     factor = spectro.shape[-1]/len(audio)
     def mjrxFormatter(x, pos): return "{:.0f}".format(x/(factor*fs))
