@@ -162,8 +162,8 @@ def save_pos_samples(audios, lbls, fs, uploaded_audio, bbxs, base_absc):
 
             line = {
                 "call_files": f"{base_name }_{int(base_absc[i]/fs+x0)}_{(x1-x0)*1000}.wav",
-                "time_stamps": int(base_absc[i]/fs+x0),
-                "durations": (x1-x0)*1000
+                "time_stamps": "{:.1f}".format(int(base_absc[i]/fs+x0)),
+                "durations": "{:.1f}".format((x1-x0)*1000)
             }
             csv.append(line)
 
@@ -239,13 +239,13 @@ if uploaded_audio is not None:
         fig, ax = plt.subplots()
         ax.matshow(spectro, aspect=750)
         factor = spectro.shape[-1]/len(audio)
-        mjrxFormatter=lambda x,pos : "{:.0f}".format(x/(factor*fs))
+        mjrxFormatter=lambda x,pos : "{:.0f}".format(x/(factor*fs*60))
         mjryFormatter=lambda y,pos : "{:.0f}".format(y*12000/spectro.shape[0])
         ax.axes.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(mjrxFormatter)) 
         ax.axes.xaxis.set_ticks_position('bottom')
         ax.axes.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(mjryFormatter)) 
         ax.axes.invert_yaxis()
-        ax.set_xlabel("Time (s)")
+        ax.set_xlabel("Time (min)")
         ax.set_ylabel("Frequency (Hz)")
         for i, box in enumerate(boxes):
             x0 = int(box[0]*factor) + int(base_absc[i]*factor)
