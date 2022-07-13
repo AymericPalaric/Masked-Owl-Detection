@@ -13,8 +13,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--input_path", type=str, required=True)
 parser.add_argument("--output_path", type=str, required=True)
 args = parser.parse_args()
-STORAGE_PATH = args.output_path
-INPUT_PATH = args.input_path
+STORAGE_PATH = args.output_path + \
+    "/" if args.output_path[-1] != "/" else args.output_path
+INPUT_PATH = args.input_path + \
+    "/" if args.input_path[-1] != "/" else args.input_path
 FS = 24000
 
 # Utils functions

@@ -4,15 +4,15 @@ This project aims at detecting 2 seconds Masked owl calls in 1 hour audio record
 
 # Installation
 
-To install all the packages required, use the command `pip install -r requirements.txt` at the root of the project. Python 3.9 or later is recomanded.
+To install all the packages required, use the command `pip install -r requirements.txt` at the root of the project. Python 3.9 or later is recomanded. A conda venv could help you upgrade your version without too much issues.
 
 You will then have to initiallise the dataset by following thoses steps :
 - Create the data folder and the different subfolders and precise the location of the data folder in the config file
 - Put your positive and raw data in the right folders with all the samples in wav in a single folder (use the move_data and convert_ogg_to_wav scripts if necessary).
 - Download the hard samples from [kaggle](https://www.kaggle.com/competitions/birdclef-2022/data) and place them in the folder.
 - Use the move_data and convert_ogg_to_wav in order to have all the samples in wav in a single folder
-- Use the create_negative_samples script to create the negative samples.
-- Use the split_samples_train_test and compute_mean_std scripts and copy the mean and standart deviation found to the constant file
+- Use the `create_negative_samples` script to create the negative samples.
+- Use the `split_samples_train_test` and compute_mean_std scripts and copy the mean and standart deviation found to the constant file
 
 # Architecture
 ```
@@ -40,6 +40,8 @@ You will then have to initiallise the dataset by following thoses steps :
 │   │   └── classif_evaluation.py
 │   ├── gui
 │   │   ├── __init__.py
+|   |   ├── preproc_gui.py
+|   |   ├── light_gui.py
 │   │   └── gui.py
 │   ├── models
 │   │   ├── __init__.py
@@ -47,7 +49,8 @@ You will then have to initiallise the dataset by following thoses steps :
 │   │   └── efficientnet.py
 │   ├── pipeline
 │   │   ├── __init__.py
-│   │   └── sliding_window.py
+│   │   ├── sliding_window.py
+|   |   └── roi_window.py
 │   ├── preprocessing
 │   │   ├── __init__.py
 │   │   └── dataset.py
@@ -125,16 +128,21 @@ It will also create a CSV file (with the name of the uploaded audio) with the fo
 -
 Otherwise you won't have any of the positive samples saved on your device.
 
-**To launch the *multiple files* graphical interface**: double click on the `GUI.sh` file. This will open a window, preparing the pipeline to process the audios. You will have to enter the absolute path towards the root of the repository. It will then ask you to put an input folder (where the files you want to process are) and an output folder (where you want to save the found calls). **Don't forget to add a `/` at the end of each path, so that this will be interpreted as a valid folder path!**
+**To launch the *multiple files* graphical interface**: double click on the `GUI.sh` file. This will open a window, preparing the pipeline to process the audios. You will have to enter the absolute path towards the root of the repository. It will then ask you to put an input folder (where the files you want to process are) and an output folder (where you want to save the found calls).
 You will then see the progress over the processing of each one of the files found at the input folder.
 After all processes are done, it will open a window in your browser (similar to the previous GUI) in which you will be able to see each of the found samples and validate them. Again, **don't forget to click on the "Save samples" buttons for each files**.
-Finally, when you are done saving the positive calls, click on the "Quit" button to clear all temporary files and stop the execution of the app. You can now close this window and stop the script.
+Finally, when you are done saving the positive calls, click on the "Quit" button to clear all temporary files and stop the execution of the app. You can now close this window and stop the script (by forcing it to stop, or by doing `CTRL + C` in the bash window that launched the program).
 
 # Next Steps and unmerged branches
 
 ## Add a new model type
+
 You can add a custom model type by doing so:
 In the `models/` folder, create a file with a custom name (for example `my_model.py`) containing a class creating your **torch** model (named for example `MyModel(torch.nn.Module)`).
 To use CLI scripts and the GUI, make sure to import and modify the following files:
 - `./src/scripts/train_classification.py` and `./src/scripts/evaluate.py`: import your model and make sure to complete the dictionary `CLASS_MODELS` in both files, and don't forget to call the `--model_type` argument in the CLI.
 - `./src/gui/gui.py`: import your model and modify the `CLASSIF_MODEL` and `CLASSIF_MODEL_PATH` variables, with `CLASSIF_MODEL_PATH` being the path from the root to the weights of your trained model.
+
+## One Shot Pipeline
+
+The branch named `fasteRCNN` contains an implementation of a one shot pipeline, but this version is not that stable, and since we had good enough results with the previous pipeline, we didn't go into too much details for that branch. Though, it remains still a good way to deeply improve our processing time, and even the prediction quality for other species.

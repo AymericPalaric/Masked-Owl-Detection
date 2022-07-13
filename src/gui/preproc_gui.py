@@ -154,8 +154,11 @@ args = parser.parse_args()
 window_size = args.win_size
 window_overlap = args.win_overlap/100
 score_thresh = args.score_thresh
-uploaded_audio_path = args.input_path
-output_folder = args.output_path
+uploaded_audio_path = args.input_path + \
+    '/' if args.input_path[-1] != '/' else args.input_path
+output_folder = args.output_path + \
+    '/' if args.output_path[-1] != '/' else args.output_path
+
 # Create output folder if it doesn't exist
 if not os.path.exists(output_folder):
     os.mkdir(output_folder)
