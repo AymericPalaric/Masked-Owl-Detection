@@ -86,11 +86,12 @@ def load_temp_files(audio: AudioFile):
     return boxes, scores, base_absc, calls_spec, temp_audios
 
 
-def save_pos_samples(audios, lbls, fs, uploaded_audio: AudioFile, bbxs, base_absc):
-    # Save boxes containing calls and the corresponding CSV
+def save_pos_samples(audios, lbls, neg_names: list[str], fs, uploaded_audio: AudioFile, bbxs, base_absc):
+
     base_name = uploaded_audio.name
     csv = []
     for i in range(len(audios)):
+        # Save boxes containing positive calls and the corresponding CSV file
         if lbls[i] == "Positive":
             box = bbxs[i]
             x0 = box[0]/fs
@@ -103,7 +104,28 @@ def save_pos_samples(audios, lbls, fs, uploaded_audio: AudioFile, bbxs, base_abs
             line = {
                 "call_files": f"{base_name }_{int(base_absc[i]/fs+x0)}_{(x1-x0)*1000}.wav",
                 "time_stamps": int(base_absc[i]/fs+x0),
-                "durations": (x1-x0)*1000
+                "durations": (x1-x0)*1000,
+                "label": "masked_owl"
+            }
+            csv.append(line)
+
+        # Save negative ones
+        if lbls[i] == "Negative" and neg_names[i] != "":
+            neg_lbl = neg_names[i].replace(" ", "_")
+            neg_save_path = STORAGE_PATH + neg_lbl + "/"
+            box = bbxs[i]
+            x0 = box[0]/fs
+            x1 = box[2]/fs
+            audio, fs = audio_utils.load_audio_file(
+                os.path.join(STORAGE_PATH, audios[i]), fs)
+            audio_utils.save_audio_file(
+                f"{neg_save_path}{base_name}_{int(base_absc[i]/fs+x0)}_{(x1-x0)*1000}.wav", audio, fs)
+
+            line = {
+                "call_files": f"{base_name }_{int(base_absc[i]/fs+x0)}_{(x1-x0)*1000}.wav",
+                "time_stamps": int(base_absc[i]/fs+x0),
+                "durations": (x1-x0)*1000,
+                "label": neg_lbl
             }
             csv.append(line)
 
@@ -146,9 +168,9 @@ for u, uploaded_audio in enumerate(uploaded_audios):
 
         st.audio(uploaded_audio.path, format='audio/wav')
 
-    # open_all = st.checkbox("Open All", key="open_all", value=True)
     n_calls = len(calls_spec)
     lbls = [0 for i in range(n_calls)]
+    neg_names = ["" for i in range(n_calls)]
     for i in range(n_calls):
         """
         **____________________________________________________________________________**
@@ -163,9 +185,13 @@ for u, uploaded_audio in enumerate(uploaded_audios):
                 "Negative", "Positive"], index=1, horizontal=True, key=f"radio_subbox_{u}_{i}")
             lbls[i] = radio_lbl
 
+            if lbls[i] == "Negative":
+                neg_names[i] = st.text_input(
+                    "Name of the call", key=f"neg_name_{u}_{i}", value="")
+
     if n_calls > 0:
         if st.button(f"Save samples for record number {u+1}"):
-            save_pos_samples(temp_audios, lbls, FS,
+            save_pos_samples(temp_audios, lbls, neg_names, FS,
                              uploaded_audio, boxes, base_absc)
 
             st.text(f"Saved samples from audio {uploaded_audio.name} !")

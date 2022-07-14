@@ -21,6 +21,7 @@ CLASSIF_MODEL = EfficientNet()
 CLASSIF_MODEL_PATH = "trained_models/efficientnet_nosoft_19.pt"
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 N_SLICES = 2
+STORAGE_PATH = "./data/gui_storage/"
 # N_BOXES = 10
 
 # Utils functions
@@ -119,11 +120,14 @@ def pipeline_on_slice(pipeline, slice_audio):
         y0 = 0
         y1 = 128
         ax.matshow(slice_spectro[:, x0:x1])
-        mjrxFormatter=lambda x,pos : "{:.1f}".format(x/(factor*fs))
-        mjryFormatter=lambda y,pos : "{:.0f}".format(y*12000/spectro.shape[0])
-        ax.axes.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(mjrxFormatter)) 
+        def mjrxFormatter(x, pos): return "{:.1f}".format(x/(factor*fs))
+        def mjryFormatter(y, pos): return "{:.0f}".format(
+            y*12000/spectro.shape[0])
+        ax.axes.xaxis.set_major_formatter(
+            mpl.ticker.FuncFormatter(mjrxFormatter))
         ax.axes.xaxis.set_ticks_position('bottom')
-        ax.axes.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(mjryFormatter)) 
+        ax.axes.yaxis.set_major_formatter(
+            mpl.ticker.FuncFormatter(mjryFormatter))
         ax.axes.invert_yaxis()
         ax.set_xlabel("Time (s)")
         ax.set_ylabel("Frequency (Hz)")
@@ -148,26 +152,50 @@ def load_audio_spectro(uploaded_audio):
     return audio, spectro, fs
 
 
-def save_pos_samples(audios, lbls, fs, uploaded_audio, bbxs, base_absc):
+def save_pos_samples(audios, lbls, neg_names, fs, uploaded_audio, bbxs, base_absc):
     # Save boxes containing calls and the corresponding CSV
     base_name = uploaded_audio.name[:-4]
     csv = []
     for i in range(len(audios)):
+        # Save boxes containing positive calls and the corresponding CSV file
         if lbls[i] == "Positive":
             box = bbxs[i]
             x0 = box[0]/fs
             x1 = box[2]/fs
+            audio, fs = audio_utils.load_audio_file(
+                os.path.join(STORAGE_PATH, audios[i]), fs)
             audio_utils.save_audio_file(
-                f"./data/gui_storage/{base_name}_{int(base_absc[i]/fs+x0)}_{(x1-x0)*1000}.wav", audios[i], fs)
+                f"{STORAGE_PATH}{base_name}_{int(base_absc[i]/fs+x0)}_{(x1-x0)*1000}.wav", audio, fs)
 
             line = {
                 "call_files": f"{base_name }_{int(base_absc[i]/fs+x0)}_{(x1-x0)*1000}.wav",
-                "time_stamps": "{:.1f}".format(int(base_absc[i]/fs+x0)),
-                "durations": "{:.1f}".format((x1-x0)*1000)
+                "time_stamps": int(base_absc[i]/fs+x0),
+                "durations": (x1-x0)*1000,
+                "label": "masked_owl"
             }
             csv.append(line)
 
-    with open(f"./data/gui_storage/{base_name}.csv", "w") as c:
+        # Save negative ones
+        if lbls[i] == "Negative" and neg_names[i] != "":
+            neg_lbl = neg_names[i].replace(" ", "_")
+            neg_save_path = STORAGE_PATH + neg_lbl + "/"
+            box = bbxs[i]
+            x0 = box[0]/fs
+            x1 = box[2]/fs
+            audio, fs = audio_utils.load_audio_file(
+                os.path.join(STORAGE_PATH, audios[i]), fs)
+            audio_utils.save_audio_file(
+                f"{neg_save_path}{base_name}_{int(base_absc[i]/fs+x0)}_{(x1-x0)*1000}.wav", audio, fs)
+
+            line = {
+                "call_files": f"{base_name }_{int(base_absc[i]/fs+x0)}_{(x1-x0)*1000}.wav",
+                "time_stamps": int(base_absc[i]/fs+x0),
+                "durations": (x1-x0)*1000,
+                "label": neg_lbl
+            }
+            csv.append(line)
+
+    with open(f"{STORAGE_PATH}{base_name}.csv", "w") as c:
         w = DictWriter(c, line.keys())
         w.writeheader()
         w.writerows(csv)
@@ -239,11 +267,15 @@ if uploaded_audio is not None:
         fig, ax = plt.subplots()
         ax.matshow(spectro, aspect=750)
         factor = spectro.shape[-1]/len(audio)
-        mjrxFormatter=lambda x,pos : "{:.0f}".format(x/(factor*fs*60))
-        mjryFormatter=lambda y,pos : "{:.0f}".format(y*12000/spectro.shape[0])
-        ax.axes.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(mjrxFormatter)) 
+        def mjrxFormatter(x, pos): return "{:.0f}".format(x/(factor*fs*60))
+
+        def mjryFormatter(y, pos): return "{:.0f}".format(
+            y*12000/spectro.shape[0])
+        ax.axes.xaxis.set_major_formatter(
+            mpl.ticker.FuncFormatter(mjrxFormatter))
         ax.axes.xaxis.set_ticks_position('bottom')
-        ax.axes.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(mjryFormatter)) 
+        ax.axes.yaxis.set_major_formatter(
+            mpl.ticker.FuncFormatter(mjryFormatter))
         ax.axes.invert_yaxis()
         ax.set_xlabel("Time (min)")
         ax.set_ylabel("Frequency (Hz)")
