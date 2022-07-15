@@ -113,6 +113,8 @@ def save_pos_samples(audios, lbls, neg_names: list[str], fs, uploaded_audio: Aud
         if lbls[i] == "Negative" and neg_names[i] != "":
             neg_lbl = neg_names[i].replace(" ", "_")
             neg_save_path = STORAGE_PATH + neg_lbl + "/"
+            if not os.path.exists(neg_save_path):
+                os.mkdir(neg_save_path)
             box = bbxs[i]
             x0 = box[0]/fs
             x1 = box[2]/fs
